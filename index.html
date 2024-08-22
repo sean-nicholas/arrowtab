@@ -4,6 +4,131 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>powertab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
+      integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      // TODO: Get all focusable elements
+      const getFocusable = () => {
+        const allFocusable = document.querySelectorAll('input')
+        const focusable = Array.from(allFocusable).filter(
+          (element) => !element.disabled,
+        )
+        return focusable
+      }
+
+      const getMiddle = (element) => {
+        const { x, y, width, height } = element.getBoundingClientRect()
+        return {
+          x: x + width / 2,
+          y: y + height / 2,
+        }
+      }
+
+      document.addEventListener(
+        'keydown',
+        (event) => {
+          if (
+            event.key !== 'ArrowLeft' &&
+            event.key !== 'ArrowRight' &&
+            event.key !== 'ArrowUp' &&
+            event.key !== 'ArrowDown'
+          ) {
+            return
+          }
+
+          if (
+            event.key === 'ArrowLeft' &&
+            document.activeElement?.selectionStart !== 0
+          ) {
+            return
+          }
+
+          if (
+            event.key === 'ArrowRight' &&
+            document.activeElement?.selectionStart !==
+              document.activeElement?.value?.length
+          ) {
+            return
+          }
+
+          if (
+            (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
+            document.activeElement?.selectionStart !==
+              document.activeElement?.selectionEnd
+          ) {
+            return
+          }
+
+          const activeElement =
+            document.activeElement === document.body
+              ? getFocusable()?.[0]
+              : document.activeElement
+
+          const activePosition = getMiddle(activeElement)
+
+          const allFocusable = document.querySelectorAll('input')
+          const nearest = _(allFocusable)
+            .filter((element) => element !== activeElement)
+            .map((element) => {
+              const position = getMiddle(element)
+              return {
+                element,
+                position,
+              }
+            })
+            .filter((focusable) => {
+              if (event.key === 'ArrowLeft') {
+                return focusable.position.x < activePosition.x
+              }
+              if (event.key === 'ArrowRight') {
+                return focusable.position.x > activePosition.x
+              }
+              if (event.key === 'ArrowUp') {
+                return focusable.position.y < activePosition.y
+              }
+              if (event.key === 'ArrowDown') {
+                return focusable.position.y > activePosition.y
+              }
+            })
+            .map((focusable) => {
+              const distance = Math.sqrt(
+                Math.pow(focusable.position.x - activePosition.x, 2) +
+                  Math.pow(focusable.position.y - activePosition.y, 2),
+              )
+              return {
+                ...focusable,
+                distance,
+              }
+            })
+            .orderBy((d) => d.distance)
+            .first()
+
+          if (!nearest) {
+            return
+          }
+
+          nearest.element.focus()
+        },
+        { capture: true },
+      )
+    </script>
   </head>
-  <body></body>
+  <body>
+    <div class="grid grid-cols-3 gap-4 p-4">
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+    </div>
+  </body>
 </html>
