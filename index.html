@@ -41,6 +41,7 @@
             return
           }
 
+          // TODO: Ifs should work for textareas
           if (
             event.key === 'ArrowLeft' &&
             document.activeElement?.selectionStart !== 0
@@ -82,17 +83,23 @@
               }
             })
             .filter((focusable) => {
+              // Calculate angle between active element and focusable element
+              const angle = Math.atan2(
+                focusable.position.y - activePosition.y,
+                focusable.position.x - activePosition.x,
+              )
+              console.log('angle', angle)
               if (event.key === 'ArrowLeft') {
-                return focusable.position.x < activePosition.x
+                return angle > -Math.PI / 4 && angle <= Math.PI / 4
               }
               if (event.key === 'ArrowRight') {
-                return focusable.position.x > activePosition.x
+                return angle > (3 * Math.PI) / 4 || angle <= (-3 * Math.PI) / 4
               }
               if (event.key === 'ArrowUp') {
-                return focusable.position.y < activePosition.y
+                return angle > -Math.PI / 4 && angle <= (3 * Math.PI) / 4
               }
               if (event.key === 'ArrowDown') {
-                return focusable.position.y > activePosition.y
+                return angle > (Math.PI * 3) / 4 || angle <= -Math.PI / 4
               }
             })
             .map((focusable) => {
@@ -112,23 +119,36 @@
             return
           }
 
-          nearest.element.focus()
+          // nearest.element.focus()
         },
         { capture: true },
       )
     </script>
   </head>
   <body>
-    <div class="grid grid-cols-3 gap-4 p-4">
+    <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <div>
+        <span>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
+          vehicula, nunc nec ultricies. Lorem ipsum dolor sit amet, consectetur
+          adipiscing elit. Nullam vehicula, nunc nec ultricies. Lorem ipsum
+          dolor sit amet, consectetur adipiscing elit. Nullam vehicula, nunc nec
+          ultricies. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+          Nullam vehicula, nunc nec ultricies.
+        </span>
+        <input type="text" class="border-2 border-gray-300 p-2" />
+      </div>
+      <div>
+        <span> Lorem ipsum dolor sit amet </span>
+        <input type="text" class="border-2 border-gray-300 p-2" />
+      </div>
+      <!-- <input type="text" class="border-2 border-gray-300 p-2" />
       <input type="text" class="border-2 border-gray-300 p-2" />
       <input type="text" class="border-2 border-gray-300 p-2" />
       <input type="text" class="border-2 border-gray-300 p-2" />
       <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" /> -->
     </div>
   </body>
 </html>
