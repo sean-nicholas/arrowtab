@@ -14,10 +14,16 @@
     <script>
       // TODO: Get all focusable elements
       const getFocusable = () => {
-        const allFocusable = document.querySelectorAll('input')
-        const focusable = Array.from(allFocusable).filter(
-          (element) => !element.disabled,
+        // Selectors from https://zellwk.com/blog/keyboard-focusable-elements/
+        const allFocusable = document.querySelectorAll(
+          'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex^="-"])',
         )
+        const focusable = Array.from(allFocusable).filter((element) => {
+          if (element.disabled) return false
+          if (element.hidden) return false
+          if (element.getAttribute('aria-hidden') === 'true') return false
+          return true
+        })
         return focusable
       }
 
@@ -44,6 +50,7 @@
           // TODO: Ifs should work for textareas
           if (
             event.key === 'ArrowLeft' &&
+            !!document.activeElement?.selectionStart &&
             document.activeElement?.selectionStart !== 0
           ) {
             return
@@ -51,6 +58,7 @@
 
           if (
             event.key === 'ArrowRight' &&
+            !!document.activeElement?.selectionStart &&
             document.activeElement?.selectionStart !==
               document.activeElement?.value?.length
           ) {
@@ -59,6 +67,8 @@
 
           if (
             (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
+            !!document.activeElement?.selectionStart &&
+            !!document.activeElement?.selectionEnd &&
             document.activeElement?.selectionStart !==
               document.activeElement?.selectionEnd
           ) {
@@ -72,8 +82,9 @@
 
           const activePosition = getMiddle(activeElement)
 
-          const allFocusable = document.querySelectorAll('input')
-          const nearest = _(allFocusable)
+          const allFocusable = getFocusable()
+
+          const candidates = _(allFocusable)
             .filter((element) => element !== activeElement)
             .map((element) => {
               const position = getMiddle(element)
@@ -88,41 +99,60 @@
                 angle = 360 - angle
               }
 
+              const distance = Math.sqrt(x ** 2 + y ** 2)
+
               return {
                 element,
                 angle,
                 position,
-              }
-            })
-            .filter(({ angle }) => {
-              if (event.key === 'ArrowDown' && (angle >= 315 || angle < 45)) {
-                return true
-              }
-
-              if (event.key === 'ArrowLeft' && angle >= 45 && angle < 135) {
-                return true
-              }
-
-              if (event.key === 'ArrowUp' && angle >= 135 && angle < 225) {
-                return true
-              }
-
-              if (event.key === 'ArrowRight' && angle >= 225 && angle < 315) {
-                return true
-              }
-            })
-            .map((focusable) => {
-              const distance = Math.sqrt(
-                Math.pow(focusable.position.x - activePosition.x, 2) +
-                  Math.pow(focusable.position.y - activePosition.y, 2),
-              )
-              return {
-                ...focusable,
                 distance,
               }
             })
-            .orderBy((d) => d.distance)
-            .first()
+            .map((focusable) => {
+              const { angle } = focusable
+
+              if (event.key === 'ArrowDown' && (angle >= 315 || angle <= 45)) {
+                return {
+                  ...focusable,
+                  withinReach: true,
+                }
+              }
+
+              if (event.key === 'ArrowLeft' && angle > 45 && angle < 135) {
+                return {
+                  ...focusable,
+                  withinReach: true,
+                }
+              }
+
+              if (event.key === 'ArrowUp' && angle >= 135 && angle <= 225) {
+                return {
+                  ...focusable,
+                  withinReach: true,
+                }
+              }
+
+              if (event.key === 'ArrowRight' && angle > 225 && angle < 315) {
+                return {
+                  ...focusable,
+                  withinReach: true,
+                }
+              }
+
+              return {
+                ...focusable,
+                withinReach: false,
+              }
+            })
+            .orderBy((f) => f.distance)
+            .map((f) => {
+              console.log(f)
+              return f
+            })
+            .filter(({ withinReach }) => withinReach)
+            .value()
+
+          const nearest = _.first(candidates)
 
           if (!nearest) {
             return
@@ -137,29 +167,25 @@
   <body>
     <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
       <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <!-- <div>
-        <span>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam
-          vehicula, nunc nec ultricies. Lorem ipsum dolor sit amet, consectetur
-          adipiscing elit. Nullam vehicula, nunc nec ultricies. Lorem ipsum
-          dolor sit amet, consectetur adipiscing elit. Nullam vehicula, nunc nec
-          ultricies. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-          Nullam vehicula, nunc nec ultricies.
-        </span>
-        <input type="text" class="border-2 border-gray-300 p-2" />
-      </div>
       <div>
-        <span> Lorem ipsum dolor sit amet </span>
-        <input type="text" class="border-2 border-gray-300 p-2" />
-      </div> -->
+        <input type="text" hidden class="border-2 border-gray-300 p-2" />
+      </div>
+      <input type="text" disabled class="border-2 border-gray-300 p-2" />
+
+      <button>Hello</button>
+      <button disabled>Hello</button>
+      <button aria-hidden="true">Hello</button>
+      <a href="#" class="focus:outline">Hello</a>
+      <a class="focus:outline">Hello</a>
+      <div></div>
+      <div tabindex="10">Hello</div>
+      <div tabindex="0">Hello</div>
+      <div tabindex="-1">Hello</div>
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" tabindex="0" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
+      <input type="text" class="border-2 border-gray-300 p-2" />
     </div>
   </body>
 </html>
