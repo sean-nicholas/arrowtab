@@ -284,31 +284,42 @@
       </div>
 
       <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
-        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input
+          type="text"
+          class="border-2 border-gray-300 p-2"
+          value="✅ input"
+        />
         <div>
+          <span>❌ input hidden</span>
           <input type="text" hidden class="border-2 border-gray-300 p-2" />
         </div>
-        <input type="text" disabled class="border-2 border-gray-300 p-2" />
-        <button>Hello</button>
-        <button disabled>Hello</button>
-        <button aria-hidden="true">Hello</button>
-        <a href="#" class="focus:outline">Hello</a>
-        <a class="focus:outline">Hello</a>
+        <input
+          type="text"
+          disabled
+          class="border-2 border-gray-300 p-2"
+          value="❌ input disabled"
+        />
+        <button>✅ Button</button>
+        <button disabled>❌ button disabled</button>
+        <button aria-hidden="true">❌ button aria-hidden</button>
+        <a href="#" class="focus:outline">✅ a tag with href</a>
+        <a class="focus:outline">❌ only a tag</a>
         <div></div>
-        <div tabindex="10">Hello</div>
-        <div tabindex="0">Hello</div>
-        <div tabindex="-1">Hello</div>
+        <div tabindex="10">✅ tabindex="10"</div>
+        <div tabindex="0">✅ tabindex="0"</div>
+        <div tabindex="-1">❌ tabindex="-1"</div>
+        <div></div>
         <input type="text" class="border-2 border-gray-300 p-2" />
-        <input type="text" tabindex="0" class="border-2 border-gray-300 p-2" />
         <div></div>
-        <textarea class="border-2 border-gray-300 p-2"></textarea>
+        <input type="text" class="border-2 border-gray-300 p-2" />
         <textarea class="border-2 border-gray-300 p-2">
-          Hi
-          Hello
+          ✅ Multiline
+          Textarea
         </textarea>
         <input type="text" class="border-2 border-gray-300 p-2" />
+        <div></div>
         <input type="text" class="border-2 border-gray-300 p-2" />
-        <input type="text" class="border-2 border-gray-300 p-2" />
+        <div></div>
       </div>
     </div>
   </body>
