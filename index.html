@@ -185,18 +185,45 @@
               }
             })
             .orderBy((f) => f.distance)
-            .map((f) => {
-              console.log(f)
-              return f
-            })
             .filter(({ withinReach }) => withinReach)
+            // .map((f) => {
+            //   console.log(f)
+            //   return f
+            // })
             .value()
 
-          const nearest = _.first(candidates)
+          let nearest = _.first(candidates)
 
           if (!nearest) {
             return
           }
+
+          // const nearlySameDistance = _.filter(candidates, (candidate) => {
+          //   return candidate.distance - nearest.distance < 10
+          // })
+
+          // console.log('nearlySameDistance', nearlySameDistance)
+
+          // if (nearlySameDistance.length > 1) {
+          //   const ordered = _.orderBy(nearlySameDistance, (candidate) => {
+          //     if (event.key === 'ArrowDown') {
+          //       console.log('ArrowDown', candidate.xDistance)
+          //       return -candidate.xDistance
+          //     }
+          //     if (event.key === 'ArrowUp') {
+          //       return candidate.xDistance
+          //     }
+          //     if (event.key === 'ArrowLeft') {
+          //       return candidate.yDistance
+          //     }
+          //     if (event.key === 'ArrowRight') {
+          //       console.log('ArrowRight', candidate.yDistance)
+          //       return -candidate.yDistance
+          //     }
+          //   })
+          //   console.log('ordered', ordered)
+          //   nearest = _.first(ordered)
+          // }
 
           nearest.element.focus()
         },
