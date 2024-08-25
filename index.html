@@ -50,7 +50,7 @@
           // TODO: Ifs should work for textareas
           if (
             event.key === 'ArrowLeft' &&
-            !!document.activeElement?.selectionStart &&
+            document.activeElement?.selectionStart !== undefined &&
             document.activeElement?.selectionStart !== 0
           ) {
             return
@@ -58,7 +58,7 @@
 
           if (
             event.key === 'ArrowRight' &&
-            !!document.activeElement?.selectionStart &&
+            document.activeElement?.selectionStart !== undefined &&
             document.activeElement?.selectionStart !==
               document.activeElement?.value?.length
           ) {
@@ -67,8 +67,8 @@
 
           if (
             (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
-            !!document.activeElement?.selectionStart &&
-            !!document.activeElement?.selectionEnd &&
+            document.activeElement?.selectionStart !== undefined &&
+            document.activeElement?.selectionEnd !== undefined &&
             document.activeElement?.selectionStart !==
               document.activeElement?.selectionEnd
           ) {
@@ -165,27 +165,39 @@
     </script>
   </head>
   <body>
-    <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <div>
-        <input type="text" hidden class="border-2 border-gray-300 p-2" />
+    <div class="flex flex-col gap-48">
+      <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
       </div>
-      <input type="text" disabled class="border-2 border-gray-300 p-2" />
-
-      <button>Hello</button>
-      <button disabled>Hello</button>
-      <button aria-hidden="true">Hello</button>
-      <a href="#" class="focus:outline">Hello</a>
-      <a class="focus:outline">Hello</a>
-      <div></div>
-      <div tabindex="10">Hello</div>
-      <div tabindex="0">Hello</div>
-      <div tabindex="-1">Hello</div>
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" tabindex="0" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
-      <input type="text" class="border-2 border-gray-300 p-2" />
+      <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <div>
+          <input type="text" hidden class="border-2 border-gray-300 p-2" />
+        </div>
+        <input type="text" disabled class="border-2 border-gray-300 p-2" />
+        <button>Hello</button>
+        <button disabled>Hello</button>
+        <button aria-hidden="true">Hello</button>
+        <a href="#" class="focus:outline">Hello</a>
+        <a class="focus:outline">Hello</a>
+        <div></div>
+        <div tabindex="10">Hello</div>
+        <div tabindex="0">Hello</div>
+        <div tabindex="-1">Hello</div>
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" tabindex="0" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+      </div>
     </div>
   </body>
 </html>
