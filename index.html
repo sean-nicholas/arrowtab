@@ -102,9 +102,20 @@
               const distance = Math.sqrt(x ** 2 + y ** 2)
 
               return {
+                relativeX: x,
+                relativeY: y,
                 element,
                 angle,
                 position,
+              }
+            })
+            .map((focusable) => {
+              const distance = Math.sqrt(
+                focusable.relativeX ** 2 + focusable.relativeY ** 2,
+              )
+
+              return {
+                ...focusable,
                 distance,
               }
             })
@@ -171,12 +182,25 @@
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
-        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" value="Hello" />
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
       </div>
+
+      <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" disabled class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" disabled class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" disabled class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" disabled class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+      </div>
+
       <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
         <input type="text" class="border-2 border-gray-300 p-2" />
         <div>
