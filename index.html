@@ -103,7 +103,6 @@
             return
           }
 
-          // TODO: Ifs should work for textareas
           if (
             event.key === 'ArrowLeft' &&
             document.activeElement?.selectionStart !== undefined &&
@@ -129,6 +128,32 @@
               document.activeElement?.selectionEnd
           ) {
             return
+          }
+
+          if (
+            event.key === 'ArrowUp' &&
+            document.activeElement?.selectionStart !== undefined &&
+            document.activeElement?.tagName.toLowerCase() === 'textarea'
+          ) {
+            const rows = document.activeElement?.value?.split('\n')
+            const start = document.activeElement?.selectionStart
+            if (start > rows.at(0).length) {
+              return
+            }
+          }
+
+          if (
+            event.key === 'ArrowDown' &&
+            document.activeElement?.selectionStart !== undefined &&
+            document.activeElement?.tagName.toLowerCase() === 'textarea'
+          ) {
+            const rows = document.activeElement?.value?.split('\n')
+            const lastRow = rows.pop()
+            const lengthUntilLastRow = _.sumBy(rows, (row) => row.length)
+            const start = document.activeElement?.selectionStart
+            if (start <= lengthUntilLastRow + 1) {
+              return
+            }
           }
 
           const activeElement =
@@ -275,6 +300,12 @@
         <div tabindex="-1">Hello</div>
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" tabindex="0" class="border-2 border-gray-300 p-2" />
+        <div></div>
+        <textarea class="border-2 border-gray-300 p-2"></textarea>
+        <textarea class="border-2 border-gray-300 p-2">
+          Hi
+          Hello
+        </textarea>
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
