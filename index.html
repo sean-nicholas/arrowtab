@@ -184,6 +184,7 @@
                 withinReach,
               }
             })
+            .reverse() // Prefer down / right if same distance
             .orderBy((f) => f.distance)
             .filter(({ withinReach }) => withinReach)
             // .map((f) => {
