@@ -35,46 +35,65 @@
         }
       }
 
-      const withinReachMetrics = {
-        XWalk: ({ angle }) => {
-          if (event.key === 'ArrowDown' && (angle >= 315 || angle <= 45)) {
-            return true
-          }
-
-          if (event.key === 'ArrowLeft' && angle > 45 && angle < 135) {
-            return true
-          }
-
-          if (event.key === 'ArrowUp' && angle >= 135 && angle <= 225) {
-            return true
-          }
-
-          if (event.key === 'ArrowRight' && angle > 225 && angle < 315) {
-            return true
-          }
-
-          return false
-        },
-      }
-
-      const distanceMetrics = {
-        euclidean: ({ xDistance, yDistance }) => {
-          return Math.sqrt(xDistance ** 2 + yDistance ** 2)
-        },
-      }
-
-      const scenarios = {
-        XWalkEuclidean: {
-          withinReachMetric: withinReachMetrics.XWalk,
-          distanceMetric: distanceMetrics.euclidean,
-        },
-      }
-
-      const activeScenario = scenarios.XWalkEuclidean
-
       document.addEventListener(
         'keydown',
         (event) => {
+          const withinReachMetrics = {
+            XWalk: ({ angle }) => {
+              if (event.key === 'ArrowDown' && (angle >= 315 || angle <= 45)) {
+                return true
+              }
+
+              if (event.key === 'ArrowLeft' && angle > 45 && angle < 135) {
+                return true
+              }
+
+              if (event.key === 'ArrowUp' && angle >= 135 && angle <= 225) {
+                return true
+              }
+
+              if (event.key === 'ArrowRight' && angle > 225 && angle < 315) {
+                return true
+              }
+
+              return false
+            },
+          }
+
+          const distanceMetrics = {
+            euclidean: ({ xDistance, yDistance }) => {
+              return Math.sqrt(xDistance ** 2 + yDistance ** 2)
+            },
+            manhattan: ({ xDistance, yDistance }) => {
+              return Math.abs(xDistance) + Math.abs(yDistance)
+            },
+            manhattanWeighted: ({ xDistance, yDistance }) => {
+              if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                return Math.abs(xDistance) + Math.abs(yDistance) * 0.1
+              }
+              if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                return Math.abs(xDistance) * 0.1 + Math.abs(yDistance)
+              }
+            },
+          }
+
+          const scenarios = {
+            XWalkEuclidean: {
+              withinReachMetric: withinReachMetrics.XWalk,
+              distanceMetric: distanceMetrics.euclidean,
+            },
+            XWalkManhattan: {
+              withinReachMetric: withinReachMetrics.XWalk,
+              distanceMetric: distanceMetrics.manhattan,
+            },
+            XWalkManhattanWeighted: {
+              withinReachMetric: withinReachMetrics.XWalk,
+              distanceMetric: distanceMetrics.manhattanWeighted,
+            },
+          }
+
+          const activeScenario = scenarios.XWalkEuclidean
+
           if (
             event.key !== 'ArrowLeft' &&
             event.key !== 'ArrowRight' &&
