@@ -35,6 +35,21 @@
         }
       }
 
+      const distanceMetrics = {
+        euclidean: ({ xDistance, yDistance }) => {
+          return Math.sqrt(xDistance ** 2 + yDistance ** 2)
+        },
+      }
+
+      const scenarios = {
+        XWalkEuclidean: {
+          withInReachMetric: () => {},
+          distanceMetric: distanceMetrics.euclidean,
+        },
+      }
+
+      const activeScenario = scenarios.XWalkEuclidean
+
       document.addEventListener(
         'keydown',
         (event) => {
@@ -90,29 +105,30 @@
               const position = getMiddle(element)
 
               // Calculate angle between active element and focusable element
-              const x = position.x - activePosition.x
-              const y = position.y - activePosition.y
+              const xDistance = position.x - activePosition.x
+              const yDistance = position.y - activePosition.y
               let angle =
-                Math.acos(y / Math.sqrt(x ** 2 + y ** 2)) * (180 / Math.PI)
-              const direction = x > 0 ? 'right' : 'left'
+                Math.acos(
+                  yDistance / Math.sqrt(xDistance ** 2 + yDistance ** 2),
+                ) *
+                (180 / Math.PI)
+              const direction = xDistance > 0 ? 'right' : 'left'
               if (direction === 'right') {
                 angle = 360 - angle
               }
 
-              const distance = Math.sqrt(x ** 2 + y ** 2)
+              const distance = Math.sqrt(xDistance ** 2 + yDistance ** 2)
 
               return {
-                relativeX: x,
-                relativeY: y,
+                xDistance,
+                yDistance,
                 element,
                 angle,
                 position,
               }
             })
             .map((focusable) => {
-              const distance = Math.sqrt(
-                focusable.relativeX ** 2 + focusable.relativeY ** 2,
-              )
+              const distance = activeScenario.distanceMetric(focusable)
 
               return {
                 ...focusable,
