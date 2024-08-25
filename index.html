@@ -103,40 +103,45 @@
             return
           }
 
+          const selectionStart = document.activeElement?.selectionStart
+          const selectionEnd = document.activeElement?.selectionEnd
+
           if (
             event.key === 'ArrowLeft' &&
-            document.activeElement?.selectionStart !== undefined &&
-            document.activeElement?.selectionStart !== 0
+            selectionStart !== undefined &&
+            selectionStart !== null &&
+            selectionStart !== 0
           ) {
             return
           }
 
           if (
             event.key === 'ArrowRight' &&
-            document.activeElement?.selectionStart !== undefined &&
-            document.activeElement?.selectionStart !==
-              document.activeElement?.value?.length
+            selectionStart !== undefined &&
+            selectionStart !== null &&
+            selectionStart !== document.activeElement?.value?.length
           ) {
             return
           }
 
           if (
             (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
-            document.activeElement?.selectionStart !== undefined &&
-            document.activeElement?.selectionEnd !== undefined &&
-            document.activeElement?.selectionStart !==
-              document.activeElement?.selectionEnd
+            selectionStart !== undefined &&
+            selectionEnd !== undefined &&
+            selectionStart !== null &&
+            selectionEnd !== null &&
+            selectionStart !== selectionEnd
           ) {
             return
           }
 
           if (
             event.key === 'ArrowUp' &&
-            document.activeElement?.selectionStart !== undefined &&
+            selectionStart !== undefined &&
             document.activeElement?.tagName.toLowerCase() === 'textarea'
           ) {
             const rows = document.activeElement?.value?.split('\n')
-            const start = document.activeElement?.selectionStart
+            const start = selectionStart
             if (start > rows.at(0).length) {
               return
             }
@@ -144,13 +149,13 @@
 
           if (
             event.key === 'ArrowDown' &&
-            document.activeElement?.selectionStart !== undefined &&
+            selectionStart !== undefined &&
             document.activeElement?.tagName.toLowerCase() === 'textarea'
           ) {
             const rows = document.activeElement?.value?.split('\n')
             const lastRow = rows.pop()
             const lengthUntilLastRow = _.sumBy(rows, (row) => row.length)
-            const start = document.activeElement?.selectionStart
+            const start = selectionStart
             if (start <= lengthUntilLastRow + 1) {
               return
             }
@@ -284,6 +289,22 @@
       </div>
 
       <div class="grid grid-cols-3 gap-4 p-4 items-baseline">
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input
+          type="text"
+          class="border-2 border-gray-300 p-2"
+          value="✅ Input with Text"
+        />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+
+        <hr class="col-span-3" />
+
         <input
           type="text"
           class="border-2 border-gray-300 p-2"
@@ -308,18 +329,42 @@
         <div tabindex="10">✅ tabindex="10"</div>
         <div tabindex="0">✅ tabindex="0"</div>
         <div tabindex="-1">❌ tabindex="-1"</div>
-        <div></div>
+
+        <hr class="col-span-3" />
+
         <input type="text" class="border-2 border-gray-300 p-2" />
-        <div></div>
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
         <input type="text" class="border-2 border-gray-300 p-2" />
         <textarea class="border-2 border-gray-300 p-2">
           ✅ Multiline
           Textarea
         </textarea>
         <input type="text" class="border-2 border-gray-300 p-2" />
-        <div></div>
         <input type="text" class="border-2 border-gray-300 p-2" />
-        <div></div>
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+
+        <hr class="col-span-3" />
+
+        <input
+          type="button"
+          class="border-2 border-gray-300 p-2"
+          value="input button"
+        />
+        <input
+          type="submit"
+          class="border-2 border-gray-300 p-2"
+          value="input submit"
+        />
+        <input
+          type="reset"
+          class="border-2 border-gray-300 p-2"
+          value="input reset"
+        />
+
+        <!-- TODO: select, details -->
+        <!-- TODO: summary, iframe (?) -->
       </div>
     </div>
   </body>
