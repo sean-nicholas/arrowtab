@@ -103,6 +103,11 @@
 
           const activeStrategy = strategy.XWalkEuclidean
 
+          const activeElement =
+            document.activeElement === document.body
+              ? getFocusable()?.[0]
+              : document.activeElement
+
           if (
             event.key !== 'ArrowLeft' &&
             event.key !== 'ArrowRight' &&
@@ -112,8 +117,8 @@
             return
           }
 
-          const selectionStart = document.activeElement?.selectionStart
-          const selectionEnd = document.activeElement?.selectionEnd
+          const selectionStart = activeElement?.selectionStart
+          const selectionEnd = activeElement?.selectionEnd
 
           if (
             event.key === 'ArrowLeft' &&
@@ -128,7 +133,7 @@
             event.key === 'ArrowRight' &&
             selectionStart !== undefined &&
             selectionStart !== null &&
-            selectionStart !== document.activeElement?.value?.length
+            selectionStart !== activeElement?.value?.length
           ) {
             return
           }
@@ -147,9 +152,9 @@
           if (
             event.key === 'ArrowUp' &&
             selectionStart !== undefined &&
-            document.activeElement?.tagName.toLowerCase() === 'textarea'
+            activeElement?.tagName.toLowerCase() === 'textarea'
           ) {
-            const rows = document.activeElement?.value?.split('\n')
+            const rows = activeElement?.value?.split('\n')
             const start = selectionStart
             if (start > rows.at(0).length) {
               return
@@ -159,9 +164,9 @@
           if (
             event.key === 'ArrowDown' &&
             selectionStart !== undefined &&
-            document.activeElement?.tagName.toLowerCase() === 'textarea'
+            activeElement?.tagName.toLowerCase() === 'textarea'
           ) {
-            const rows = document.activeElement?.value?.split('\n')
+            const rows = activeElement?.value?.split('\n')
             const lastRow = rows.pop()
             const lengthUntilLastRow = _.sumBy(rows, (row) => row.length)
             const start = selectionStart
@@ -170,10 +175,28 @@
             }
           }
 
-          const activeElement =
-            document.activeElement === document.body
-              ? getFocusable()?.[0]
-              : document.activeElement
+          const inputTypesThatNeedModifierKey = {
+            date: ['ArrowDown', 'ArrowUp'],
+            time: ['ArrowDown', 'ArrowUp'],
+            datetime: ['ArrowDown', 'ArrowUp'],
+            'datetime-local': ['ArrowDown', 'ArrowUp'],
+            month: ['ArrowDown', 'ArrowUp'],
+            week: ['ArrowDown', 'ArrowUp'],
+            number: ['ArrowDown', 'ArrowUp'],
+            range: ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'],
+          }
+          if (activeElement?.tagName.toLowerCase() === 'input') {
+            const inputType = activeElement?.type
+            if (inputTypesThatNeedModifierKey[inputType]) {
+              if (
+                inputTypesThatNeedModifierKey[inputType].includes(event.key)
+              ) {
+                if (!event.shiftKey) {
+                  return
+                }
+              }
+            }
+          }
 
           const activePosition = getMiddle(activeElement)
 
@@ -390,6 +413,10 @@
         <input type="number" class="border-2 border-gray-300 p-2" />
         <input type="range" class="border-2 border-gray-300 p-2" />
         <input type="color" class="border-2 border-gray-300 p-2" />
+
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
+        <input type="text" class="border-2 border-gray-300 p-2" />
 
         <!-- TODO: select, details -->
         <!-- TODO: summary, iframe (?) -->
