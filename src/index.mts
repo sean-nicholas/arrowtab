@@ -13,8 +13,6 @@ import { getMiddle } from './lib/positions.mjs'
 import { strategy } from './lib/strategies.js'
 import { sumBy } from './lib/sumBy.mjs'
 
-// TODO: Better name
-
 export const initArrowTab = () => {
   document.addEventListener(
     'keydown',
