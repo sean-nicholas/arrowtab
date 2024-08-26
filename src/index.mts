@@ -79,7 +79,7 @@ export const initArrowTab = () => {
           event.key === 'ArrowUp' &&
           selectionStart !== undefined &&
           selectionStart !== null &&
-          activeElement.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
+          activeElement instanceof HTMLTextAreaElement
         ) {
           const rows = activeElement.value?.split('\n')
           const start = selectionStart
@@ -93,7 +93,7 @@ export const initArrowTab = () => {
           event.key === 'ArrowDown' &&
           selectionStart !== undefined &&
           selectionStart !== null &&
-          activeElement.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
+          activeElement instanceof HTMLTextAreaElement
         ) {
           const rows = activeElement.value?.split('\n')
           const withoutLastRow = rows.slice(0, -1)
