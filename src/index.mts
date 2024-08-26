@@ -8,6 +8,8 @@
 // eventTriggerName: 'keydown' | 'keyup',
 // earlyReturn: (event) => boolean, // TODO: Better name
 
+import { sumBy } from './helpers.mjs'
+
 const getFocusable = () => {
   // Selectors from https://zellwk.com/blog/keyboard-focusable-elements/
   const allFocusable = document.querySelectorAll(
@@ -173,9 +175,8 @@ document.addEventListener(
         activeElement?.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
       ) {
         const rows = activeElement?.value?.split('\n')
-        // TODO: Refactor
-        const lastRow = rows.pop()
-        const lengthUntilLastRow = _.sumBy(rows, (row) => row.length)
+        const withoutLastRow = rows.slice(0, -1)
+        const lengthUntilLastRow = sumBy(withoutLastRow, (row) => row.length)
 
         const start = selectionStart
         if (start <= lengthUntilLastRow + 1) {

@@ -11,6 +11,7 @@
   "keywords": [],
   "author": "",
   "license": "MIT",
+  "type": "module",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "http-server": "^14.1.1",
