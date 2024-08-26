@@ -26,7 +26,7 @@ npm:
 npm install arrowtab
 ```
 
-Usage:
+## Usage
 
 ```js
 import { initArrowTab } from 'arrowtab'
