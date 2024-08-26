@@ -9,6 +9,7 @@
 // earlyReturn: (event) => boolean, // TODO: Better name
 
 import { sumBy } from './helpers.mjs'
+import { getMiddle } from './positions.js'
 
 const getFocusable = () => {
   // Selectors from https://zellwk.com/blog/keyboard-focusable-elements/
@@ -22,14 +23,6 @@ const getFocusable = () => {
     return true
   })
   return focusable
-}
-
-const getMiddle = (element: Element) => {
-  const { x, y, width, height } = element.getBoundingClientRect()
-  return {
-    x: x + width / 2,
-    y: y + height / 2,
-  }
 }
 
 // TODO: Better name
