@@ -5,7 +5,7 @@
   "main": "dist/index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"tsc --watch\" \"http-server -o\"",
+    "dev": "concurrently \"tsc --watch\" \"http-server -o --cors\"",
     "build": "tsc",
     "clean": "rm -rf dist",
     "prepublish": "pnpm clean && pnpm build"
