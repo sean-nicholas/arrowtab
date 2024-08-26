@@ -14,15 +14,15 @@ const getFocusable = () => {
     'a[href], button, input, textarea, select, details, [tabindex]:not([tabindex^="-"])',
   )
   const focusable = Array.from(allFocusable).filter((element) => {
-    if (element.disabled) return false
-    if (element.hidden) return false
+    if ('disabled' in element && element.disabled) return false
+    if ('hidden' in element && element.hidden) return false
     if (element.getAttribute('aria-hidden') === 'true') return false
     return true
   })
   return focusable
 }
 
-const getMiddle = (element) => {
+const getMiddle = (element: HTMLElement) => {
   const { x, y, width, height } = element.getBoundingClientRect()
   return {
     x: x + width / 2,
@@ -30,11 +30,20 @@ const getMiddle = (element) => {
   }
 }
 
+// TODO: Better name
+type StrategyInput = {
+  xDistance: number
+  yDistance: number
+  element: HTMLElement
+  angle: number
+  position: { x: number; y: number }
+}
+
 document.addEventListener(
   'keydown',
   (event) => {
     const withinReachMetrics = {
-      XWalk: ({ angle }) => {
+      XWalk: ({ angle }: StrategyInput) => {
         if (event.key === 'ArrowDown' && (angle >= 315 || angle <= 45)) {
           return true
         }
@@ -56,13 +65,13 @@ document.addEventListener(
     }
 
     const distanceMetrics = {
-      euclidean: ({ xDistance, yDistance }) => {
+      euclidean: ({ xDistance, yDistance }: StrategyInput) => {
         return Math.sqrt(xDistance ** 2 + yDistance ** 2)
       },
-      manhattan: ({ xDistance, yDistance }) => {
+      manhattan: ({ xDistance, yDistance }: StrategyInput) => {
         return Math.abs(xDistance) + Math.abs(yDistance)
       },
-      manhattanWeighted: ({ xDistance, yDistance }) => {
+      manhattanWeighted: ({ xDistance, yDistance }: StrategyInput) => {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           return Math.abs(xDistance) + Math.abs(yDistance) * 0.1
         }
@@ -94,6 +103,10 @@ document.addEventListener(
         ? getFocusable()?.[0]
         : document.activeElement
 
+    if (!activeElement) {
+      return
+    }
+
     if (
       event.key !== 'ArrowLeft' &&
       event.key !== 'ArrowRight' &&
@@ -103,61 +116,71 @@ document.addEventListener(
       return
     }
 
-    const selectionStart = activeElement?.selectionStart
-    const selectionEnd = activeElement?.selectionEnd
-
     if (
-      event.key === 'ArrowLeft' &&
-      selectionStart !== undefined &&
-      selectionStart !== null &&
-      selectionStart !== 0
+      activeElement instanceof HTMLInputElement ||
+      activeElement instanceof HTMLTextAreaElement
     ) {
-      return
-    }
+      const selectionStart = activeElement.selectionStart
+      const selectionEnd = activeElement?.selectionEnd
 
-    if (
-      event.key === 'ArrowRight' &&
-      selectionStart !== undefined &&
-      selectionStart !== null &&
-      selectionStart !== activeElement?.value?.length
-    ) {
-      return
-    }
-
-    if (
-      (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
-      selectionStart !== undefined &&
-      selectionEnd !== undefined &&
-      selectionStart !== null &&
-      selectionEnd !== null &&
-      selectionStart !== selectionEnd
-    ) {
-      return
-    }
-
-    if (
-      event.key === 'ArrowUp' &&
-      selectionStart !== undefined &&
-      activeElement?.tagName.toLowerCase() === 'textarea'
-    ) {
-      const rows = activeElement?.value?.split('\n')
-      const start = selectionStart
-      if (start > rows.at(0).length) {
+      if (
+        event.key === 'ArrowLeft' &&
+        selectionStart !== undefined &&
+        selectionStart !== null &&
+        selectionStart !== 0
+      ) {
         return
       }
-    }
 
-    if (
-      event.key === 'ArrowDown' &&
-      selectionStart !== undefined &&
-      activeElement?.tagName.toLowerCase() === 'textarea'
-    ) {
-      const rows = activeElement?.value?.split('\n')
-      const lastRow = rows.pop()
-      const lengthUntilLastRow = _.sumBy(rows, (row) => row.length)
-      const start = selectionStart
-      if (start <= lengthUntilLastRow + 1) {
+      if (
+        event.key === 'ArrowRight' &&
+        selectionStart !== undefined &&
+        selectionStart !== null &&
+        selectionStart !== activeElement?.value?.length
+      ) {
         return
+      }
+
+      if (
+        (event.key === 'ArrowLeft' || event.key === 'ArrowRight') &&
+        selectionStart !== undefined &&
+        selectionEnd !== undefined &&
+        selectionStart !== null &&
+        selectionEnd !== null &&
+        selectionStart !== selectionEnd
+      ) {
+        return
+      }
+
+      if (
+        event.key === 'ArrowUp' &&
+        selectionStart !== undefined &&
+        selectionStart !== null &&
+        activeElement?.tagName.toLowerCase() === 'textarea'
+      ) {
+        const rows = activeElement?.value?.split('\n')
+        const start = selectionStart
+        const firstRow = rows.at(0)
+        if (firstRow && start > firstRow.length) {
+          return
+        }
+      }
+
+      if (
+        event.key === 'ArrowDown' &&
+        selectionStart !== undefined &&
+        selectionStart !== null &&
+        activeElement?.tagName.toLowerCase() === 'textarea'
+      ) {
+        const rows = activeElement?.value?.split('\n')
+        // TODO: Refactor
+        const lastRow = rows.pop()
+        const lengthUntilLastRow = _.sumBy(rows, (row) => row.length)
+
+        const start = selectionStart
+        if (start <= lengthUntilLastRow + 1) {
+          return
+        }
       }
     }
 
@@ -201,8 +224,6 @@ document.addEventListener(
         if (direction === 'right') {
           angle = 360 - angle
         }
-
-        const distance = Math.sqrt(xDistance ** 2 + yDistance ** 2)
 
         return {
           xDistance,
