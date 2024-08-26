@@ -205,6 +205,8 @@ document.addEventListener(
         // TODO: Use modifierKey
         if (!event.shiftKey) {
           return
+        } else {
+          event.preventDefault()
         }
       }
     }
