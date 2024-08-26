@@ -8,9 +8,9 @@
 // eventTriggerName: 'keydown' | 'keyup',
 // earlyReturn: (event) => boolean, // TODO: Better name
 
-import { getFocusable } from './getFocusable.mjs'
-import { getMiddle } from './positions.mjs'
-import { sumBy } from './sumBy.mjs'
+import { getFocusable } from './lib/getFocusable.mjs'
+import { getMiddle } from './lib/positions.mjs'
+import { sumBy } from './lib/sumBy.mjs'
 
 // TODO: Better name
 type StrategyInput = {
