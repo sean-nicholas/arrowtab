@@ -24,7 +24,7 @@ const getFocusable = () => {
   return focusable
 }
 
-const getMiddle = (element: HTMLElement) => {
+const getMiddle = (element: Element) => {
   const { x, y, width, height } = element.getBoundingClientRect()
   return {
     x: x + width / 2,
@@ -36,7 +36,7 @@ const getMiddle = (element: HTMLElement) => {
 type StrategyInput = {
   xDistance: number
   yDistance: number
-  element: HTMLElement
+  element: Element
   angle: number
   position: { x: number; y: number }
 }
@@ -123,7 +123,7 @@ document.addEventListener(
       activeElement instanceof HTMLTextAreaElement
     ) {
       const selectionStart = activeElement.selectionStart
-      const selectionEnd = activeElement?.selectionEnd
+      const selectionEnd = activeElement.selectionEnd
 
       if (
         event.key === 'ArrowLeft' &&
@@ -138,7 +138,7 @@ document.addEventListener(
         event.key === 'ArrowRight' &&
         selectionStart !== undefined &&
         selectionStart !== null &&
-        selectionStart !== activeElement?.value?.length
+        selectionStart !== activeElement.value?.length
       ) {
         return
       }
@@ -158,9 +158,9 @@ document.addEventListener(
         event.key === 'ArrowUp' &&
         selectionStart !== undefined &&
         selectionStart !== null &&
-        activeElement?.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
+        activeElement.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
       ) {
-        const rows = activeElement?.value?.split('\n')
+        const rows = activeElement.value?.split('\n')
         const start = selectionStart
         const firstRow = rows.at(0)
         if (firstRow && start > firstRow.length) {
@@ -172,9 +172,9 @@ document.addEventListener(
         event.key === 'ArrowDown' &&
         selectionStart !== undefined &&
         selectionStart !== null &&
-        activeElement?.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
+        activeElement.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
       ) {
-        const rows = activeElement?.value?.split('\n')
+        const rows = activeElement.value?.split('\n')
         const withoutLastRow = rows.slice(0, -1)
         const lengthUntilLastRow = sumBy(withoutLastRow, (row) => row.length)
 
@@ -185,7 +185,7 @@ document.addEventListener(
       }
     }
 
-    const inputTypesThatNeedModifierKey = {
+    const inputTypesThatNeedModifierKey: Record<string, string[]> = {
       date: ['ArrowDown', 'ArrowUp'],
       time: ['ArrowDown', 'ArrowUp'],
       datetime: ['ArrowDown', 'ArrowUp'],
@@ -196,14 +196,15 @@ document.addEventListener(
       range: ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'],
     }
 
-    // TODO: Use instanceof
-    if (activeElement?.tagName.toLowerCase() === 'input') {
-      const inputType = activeElement?.type
-      if (inputTypesThatNeedModifierKey[inputType]) {
-        if (inputTypesThatNeedModifierKey[inputType].includes(event.key)) {
-          if (!event.shiftKey) {
-            return
-          }
+    if (activeElement instanceof HTMLInputElement) {
+      const inputType = activeElement.type
+      if (
+        inputTypesThatNeedModifierKey[inputType] &&
+        inputTypesThatNeedModifierKey[inputType].includes(event.key)
+      ) {
+        // TODO: Use modifierKey
+        if (!event.shiftKey) {
+          return
         }
       }
     }
@@ -211,57 +212,57 @@ document.addEventListener(
     const activePosition = getMiddle(activeElement)
 
     const allFocusable = getFocusable()
+    const withoutActiveElement = allFocusable.filter(
+      (element) => element !== activeElement,
+    )
+    const withPosition = withoutActiveElement.map((element) => {
+      const position = getMiddle(element)
 
-    const candidates = _(allFocusable)
-      .filter((element) => element !== activeElement)
-      .map((element) => {
-        const position = getMiddle(element)
+      // Calculate angle between active element and focusable element
+      const xDistance = position.x - activePosition.x
+      const yDistance = position.y - activePosition.y
+      let angle =
+        Math.acos(yDistance / Math.sqrt(xDistance ** 2 + yDistance ** 2)) *
+        (180 / Math.PI)
+      const direction = xDistance > 0 ? 'right' : 'left'
+      if (direction === 'right') {
+        angle = 360 - angle
+      }
 
-        // Calculate angle between active element and focusable element
-        const xDistance = position.x - activePosition.x
-        const yDistance = position.y - activePosition.y
-        let angle =
-          Math.acos(yDistance / Math.sqrt(xDistance ** 2 + yDistance ** 2)) *
-          (180 / Math.PI)
-        const direction = xDistance > 0 ? 'right' : 'left'
-        if (direction === 'right') {
-          angle = 360 - angle
-        }
+      return {
+        xDistance,
+        yDistance,
+        element,
+        angle,
+        position,
+      }
+    })
+    const withDistance = withPosition.map((focusable) => {
+      const distance = activeStrategy.distanceMetric(focusable)
 
-        return {
-          xDistance,
-          yDistance,
-          element,
-          angle,
-          position,
-        }
-      })
-      .map((focusable) => {
-        const distance = activeStrategy.distanceMetric(focusable)
+      return {
+        ...focusable,
+        distance,
+      }
+    })
+    const withWithinReach = withDistance.map((focusable) => {
+      const withinReach = activeStrategy.withinReachMetric(focusable)
 
-        return {
-          ...focusable,
-          distance,
-        }
-      })
-      .map((focusable) => {
-        const withinReach = activeStrategy.withinReachMetric(focusable)
+      return {
+        ...focusable,
+        withinReach,
+      }
+    })
 
-        return {
-          ...focusable,
-          withinReach,
-        }
-      })
-      .reverse() // Prefer down / right if same distance
-      .orderBy((f) => f.distance)
-      .filter(({ withinReach }) => withinReach)
-      // .map((f) => {
-      //   console.log(f)
-      //   return f
-      // })
-      .value()
+    const reversed = [...withWithinReach].reverse() // Prefer down / right if same distance
 
-    let nearest = _.first(candidates)
+    const sorted = reversed.sort((a, b) => {
+      return a.distance - b.distance
+    })
+
+    const withinReach = sorted.filter(({ withinReach }) => withinReach)
+
+    let nearest = withinReach.at(0)
 
     if (!nearest) {
       return
@@ -294,7 +295,9 @@ document.addEventListener(
     //   nearest = _.first(ordered)
     // }
 
-    nearest.element.focus()
+    if (nearest.element instanceof HTMLElement) {
+      nearest.element.focus()
+    }
   },
   { capture: true },
 )
