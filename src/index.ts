@@ -156,7 +156,7 @@ document.addEventListener(
         event.key === 'ArrowUp' &&
         selectionStart !== undefined &&
         selectionStart !== null &&
-        activeElement?.tagName.toLowerCase() === 'textarea'
+        activeElement?.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
       ) {
         const rows = activeElement?.value?.split('\n')
         const start = selectionStart
@@ -170,7 +170,7 @@ document.addEventListener(
         event.key === 'ArrowDown' &&
         selectionStart !== undefined &&
         selectionStart !== null &&
-        activeElement?.tagName.toLowerCase() === 'textarea'
+        activeElement?.tagName.toLowerCase() === 'textarea' // TODO: Use instanceof
       ) {
         const rows = activeElement?.value?.split('\n')
         // TODO: Refactor
@@ -194,6 +194,8 @@ document.addEventListener(
       number: ['ArrowDown', 'ArrowUp'],
       range: ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'],
     }
+
+    // TODO: Use instanceof
     if (activeElement?.tagName.toLowerCase() === 'input') {
       const inputType = activeElement?.type
       if (inputTypesThatNeedModifierKey[inputType]) {
