@@ -9,8 +9,8 @@
 // earlyReturn: (event) => boolean, // TODO: Better name
 
 import { getFocusable } from './getFocusable.mjs'
-import { sumBy } from './helpers.mjs'
 import { getMiddle } from './positions.mjs'
+import { sumBy } from './sumBy.mjs'
 
 // TODO: Better name
 type StrategyInput = {
