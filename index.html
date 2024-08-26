@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>arrowTab</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"
-      integrity="sha512-WFN04846sdKMIP5LKNphMaWzU7YpMyCU245etK3g/2ARYbPK9Ub18eG+ljU96qKRCWh+quCY7yefSmlkQw1ANQ=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
-    <script type="module" src="./dist/index.mjs"></script>
   </head>
   <body>
     <div class="flex flex-col gap-48">
@@ -141,5 +134,10 @@
         <!-- TODO: summary, iframe (?) -->
       </div>
     </div>
+    <!-- <script type="module" src="./dist/index.mjs"></script> -->
+    <script type="module">
+      import { initArrowTab } from './dist/index.mjs'
+      initArrowTab()
+    </script>
   </body>
 </html>
