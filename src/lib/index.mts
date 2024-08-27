@@ -12,7 +12,9 @@
 // TODO: select, details, summary, iframe
 // TODO: Investigate links that don't show focus outline sometimes
 
+import { getAngle } from './getAngle.mjs'
 import { getFocusable } from './getFocusable.mjs'
+import { getXyDistance } from './getXyDistance.mjs'
 import { hasTextSelection } from './hasTextSelection.mjs'
 import { getMiddle, getTopLeft } from './positions.mjs'
 import { preventNativeArrowKeyPresses } from './preventNativeArrowKeyPresses.mjs'
@@ -61,32 +63,16 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         return
       }
 
-      const activePosition = getMiddle(activeElement)
-
       const allFocusable = getFocusable()
       const withoutActiveElement = allFocusable.filter(
         (element) => element !== activeElement,
       )
       const withPosition = withoutActiveElement.map((element) => {
-        const position = getMiddle(element)
-
-        // Calculate angle between active element and focusable element
-        const xDistance = position.x - activePosition.x
-        const yDistance = position.y - activePosition.y
-        let angle =
-          Math.acos(yDistance / Math.sqrt(xDistance ** 2 + yDistance ** 2)) *
-          (180 / Math.PI)
-        const direction = xDistance > 0 ? 'right' : 'left'
-        if (direction === 'right') {
-          angle = 360 - angle
-        }
-
         return {
-          xDistance,
-          yDistance,
+          ...getXyDistance({ activeElement, element }),
           element,
-          angle,
-          position,
+          angle: getAngle({ activeElement, element }),
+          position: getMiddle(element),
         }
       })
       const withDistance = withPosition.map((focusable) => {
