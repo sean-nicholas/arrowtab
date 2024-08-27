@@ -14,7 +14,7 @@
 
 import { getFocusable } from './lib/getFocusable.mjs'
 import { hasTextSelection } from './lib/hasTextSelection.mjs'
-import { getMiddle, getTopLeft } from './lib/positions.mjs'
+import { getTopLeft } from './lib/positions.mjs'
 import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.mjs'
 import { getByXWalkEuclidean } from './lib/strategies.mjs'
 
@@ -51,7 +51,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         const firstFocusable = getFocusable()?.[0]
         if (firstFocusable instanceof HTMLElement) {
           firstFocusable.focus()
-          console.log('firstFocusable', firstFocusable)
           return
         }
       }
@@ -59,8 +58,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
       if (hasTextSelection({ activeElement, event })) {
         return
       }
-
-      const activePosition = getMiddle(activeElement)
 
       const allFocusable = getFocusable()
       const withoutActiveElement = allFocusable.filter(
