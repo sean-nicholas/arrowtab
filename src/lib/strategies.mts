@@ -60,3 +60,46 @@ export const getByXWalkEuclidean: Strategy = ({
 
   return sorted
 }
+
+export const getByDirection: Strategy = ({
+  focusableElements,
+  activeElement,
+  event,
+}) => {
+  const withData = focusableElements.map((element) => {
+    const distances = getXyDistance({ activeElement, element })
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      return {
+        element,
+        distance: distances.yDistance,
+        withinReach:
+          event.key === 'ArrowDown'
+            ? distances.yDistance > 0
+            : distances.yDistance < 0,
+      }
+    }
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      return {
+        element,
+        distance: distances.xDistance,
+        withinReach:
+          event.key === 'ArrowRight'
+            ? distances.xDistance > 0
+            : distances.xDistance < 0,
+      }
+    }
+
+    return {
+      element,
+      distance: Number.POSITIVE_INFINITY,
+      withinReach: false,
+    }
+  })
+
+  const sorted = withData.sort((a, b) => {
+    return a.distance - b.distance
+  })
+
+  return sorted
+}
