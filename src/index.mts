@@ -9,9 +9,11 @@
 // earlyReturn: (event) => boolean, // TODO: Better name
 
 import { getFocusable } from './lib/getFocusable.mjs'
-import { getMiddle } from './lib/positions.mjs'
+import { getMiddle, getTopLeft } from './lib/positions.mjs'
 import { strategy } from './lib/strategies.js'
 import { sumBy } from './lib/sumBy.mjs'
+
+let inDebugMode = false
 
 export const initArrowTab = () => {
   document.addEventListener(
@@ -219,8 +221,56 @@ export const initArrowTab = () => {
       //   nearest = _.first(ordered)
       // }
 
-      if (nearest.element instanceof HTMLElement) {
-        nearest.element.focus()
+      if (!event.ctrlKey) {
+        if (nearest.element instanceof HTMLElement) {
+          nearest.element.focus()
+        }
+      } else {
+        if (inDebugMode) {
+          document
+            .querySelectorAll('[data-arrowtab="debug"]')
+            .forEach((div) => {
+              div.remove()
+            })
+          inDebugMode = false
+          return
+        }
+
+        inDebugMode = true
+
+        let counter = 1
+        let withinReachCounter = 1
+        for (const focusable of sorted) {
+          if (!(focusable.element instanceof HTMLElement)) continue
+          const div = document.createElement('div')
+          div.style.position = 'absolute'
+          div.style.top = getTopLeft(focusable.element).y + 'px'
+          div.style.left = getTopLeft(focusable.element).x + 'px'
+          let width = focusable.element.offsetWidth
+          let height = focusable.element.offsetHeight
+          if (width < 10) {
+            width = 10
+          }
+          if (height < 10) {
+            height = 10
+          }
+          div.style.width = width + 'px'
+          div.style.height = height + 'px'
+          const color = focusable.withinReach ? 'green' : 'red'
+          div.style.border = `1px solid ${color}`
+          div.style.color = 'white'
+          div.style.backgroundColor = color
+          div.style.zIndex = '100000'
+          div.className = 'flex flex-col items-center justify-center'
+
+          div.innerHTML = `<div>${
+            focusable.withinReach ? withinReachCounter++ : withinReachCounter
+          } (${counter++})</div>`
+          ;(div as any).focusable = focusable
+          div.dataset.arrowtab = 'debug'
+
+          document.body.appendChild(div)
+        }
       }
     },
     { capture: true },
