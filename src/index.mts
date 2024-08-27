@@ -261,11 +261,13 @@ export const initArrowTab = () => {
           div.style.color = 'white'
           div.style.backgroundColor = color
           div.style.zIndex = '100000'
-          div.className = 'flex flex-col items-center justify-center'
+          div.style.display = 'flex'
+          div.style.alignItems = 'center'
+          div.style.justifyContent = 'center'
 
-          div.innerHTML = `<div>${
-            focusable.withinReach ? withinReachCounter++ : withinReachCounter
-          } (${counter++})</div>`
+          div.innerHTML = `<div>${counter++} ${
+            focusable.withinReach ? `(${withinReachCounter++})` : ''
+          }</div>`
           ;(div as any).focusable = focusable
           div.dataset.arrowtab = 'debug'
 
