@@ -21,21 +21,28 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
     (event) => {
       const activeStrategy = strategy.XWalkEuclidean
 
-      const activeElement =
-        document.activeElement === document.body
-          ? getFocusable()?.[0]
-          : document.activeElement
-
-      if (!activeElement) {
-        return
-      }
-
       if (
         event.key !== 'ArrowLeft' &&
         event.key !== 'ArrowRight' &&
         event.key !== 'ArrowUp' &&
         event.key !== 'ArrowDown'
       ) {
+        return
+      }
+
+      const nothingHasFocus = document.activeElement === document.body
+      if (nothingHasFocus) {
+        const firstFocusable = getFocusable()?.[0]
+        if (firstFocusable instanceof HTMLElement) {
+          firstFocusable.focus()
+          console.log('firstFocusable', firstFocusable)
+          return
+        }
+      }
+
+      const activeElement = document.activeElement
+
+      if (!activeElement) {
         return
       }
 
