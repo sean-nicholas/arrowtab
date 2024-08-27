@@ -1,39 +1,14 @@
+import { getEuclideanDistance } from './distances.mjs'
 import { getAngle } from './getAngle.mjs'
 import { getXyDistance } from './getXyDistance.mjs'
 
-type StrategyInput = {
-  event: KeyboardEvent
-  xDistance: number
-  yDistance: number
-  element: Element
+const getIsWithinXWalk = ({
+  angle,
+  event,
+}: {
   angle: number
-  position: { x: number; y: number }
-}
-
-const distanceMetrics = {
-  euclidean: ({
-    xDistance,
-    yDistance,
-  }: {
-    xDistance: number
-    yDistance: number
-  }) => {
-    return Math.sqrt(xDistance ** 2 + yDistance ** 2)
-  },
-  manhattan: ({ xDistance, yDistance }: StrategyInput) => {
-    return Math.abs(xDistance) + Math.abs(yDistance)
-  },
-  manhattanWeighted: ({ xDistance, yDistance, event }: StrategyInput) => {
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      return Math.abs(xDistance) + Math.abs(yDistance) * 0.1
-    }
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      return Math.abs(xDistance) * 0.1 + Math.abs(yDistance)
-    }
-  },
-}
-
-const xWalk = ({ angle, event }: { angle: number; event: KeyboardEvent }) => {
+  event: KeyboardEvent
+}) => {
   if (event.key === 'ArrowDown' && (angle >= 315 || angle <= 45)) {
     return true
   }
@@ -66,9 +41,9 @@ export const getByXWalkEuclidean: Strategy = ({
 }) => {
   const withData = focusableElements.map((element) => {
     const distances = getXyDistance({ activeElement, element })
-    const distance = distanceMetrics.euclidean(distances)
+    const distance = getEuclideanDistance(distances)
     const angle = getAngle({ activeElement, element })
-    const withinReach = xWalk({ angle, event })
+    const withinReach = getIsWithinXWalk({ angle, event })
 
     return {
       element,
