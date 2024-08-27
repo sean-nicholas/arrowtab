@@ -16,7 +16,7 @@ import { getFocusable } from './lib/getFocusable.mjs'
 import { hasTextSelection } from './lib/hasTextSelection.mjs'
 import { getMiddle, getTopLeft } from './lib/positions.mjs'
 import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.mjs'
-import { strategy } from './lib/strategies.mjs'
+import { getByXWalkEuclidean } from './lib/strategies.mjs'
 
 let inDebugMode = false
 
@@ -24,8 +24,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
   document.addEventListener(
     'keydown',
     (event) => {
-      const activeStrategy = strategy.XWalkEuclidean
-
       if (
         event.key !== 'ArrowLeft' &&
         event.key !== 'ArrowRight' &&
@@ -68,52 +66,11 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
       const withoutActiveElement = allFocusable.filter(
         (element) => element !== activeElement,
       )
-      const withPosition = withoutActiveElement.map((element) => {
-        const position = getMiddle(element)
 
-        // Calculate angle between active element and focusable element
-        const xDistance = position.x - activePosition.x
-        const yDistance = position.y - activePosition.y
-        let angle =
-          Math.acos(yDistance / Math.sqrt(xDistance ** 2 + yDistance ** 2)) *
-          (180 / Math.PI)
-        const direction = xDistance > 0 ? 'right' : 'left'
-        if (direction === 'right') {
-          angle = 360 - angle
-        }
-
-        return {
-          xDistance,
-          yDistance,
-          element,
-          angle,
-          position,
-        }
-      })
-      const withDistance = withPosition.map((focusable) => {
-        const distance = activeStrategy.distanceMetric({ ...focusable, event })
-
-        return {
-          ...focusable,
-          distance,
-        }
-      })
-      const withWithinReach = withDistance.map((focusable) => {
-        const withinReach = activeStrategy.withinReachMetric({
-          ...focusable,
-          event,
-        })
-
-        return {
-          ...focusable,
-          withinReach,
-        }
-      })
-
-      const reversed = [...withWithinReach].reverse() // Prefer down / right if same distance
-
-      const sorted = reversed.sort((a, b) => {
-        return a.distance - b.distance
+      const sorted = getByXWalkEuclidean({
+        focusableElements: withoutActiveElement,
+        activeElement,
+        event,
       })
 
       const withinReach = sorted.filter(({ withinReach }) => withinReach)
@@ -123,33 +80,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
       if (!nearest) {
         return
       }
-
-      // const nearlySameDistance = _.filter(candidates, (candidate) => {
-      //   return candidate.distance - nearest.distance < 10
-      // })
-
-      // console.log('nearlySameDistance', nearlySameDistance)
-
-      // if (nearlySameDistance.length > 1) {
-      //   const ordered = _.orderBy(nearlySameDistance, (candidate) => {
-      //     if (event.key === 'ArrowDown') {
-      //       console.log('ArrowDown', candidate.xDistance)
-      //       return -candidate.xDistance
-      //     }
-      //     if (event.key === 'ArrowUp') {
-      //       return candidate.xDistance
-      //     }
-      //     if (event.key === 'ArrowLeft') {
-      //       return candidate.yDistance
-      //     }
-      //     if (event.key === 'ArrowRight') {
-      //       console.log('ArrowRight', candidate.yDistance)
-      //       return -candidate.yDistance
-      //     }
-      //   })
-      //   console.log('ordered', ordered)
-      //   nearest = _.first(ordered)
-      // }
 
       if (debug && event.ctrlKey) {
         if (inDebugMode) {
