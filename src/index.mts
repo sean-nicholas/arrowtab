@@ -10,11 +10,11 @@
 
 // TODO: Check if tab focuses the same elements as arrowTab
 // TODO: select, details, summary, iframe
-// TODO: Decide if modifierKey should be used to focus next element or to enable the native input behavior
 // TODO: Investigate links that don't show focus outline sometimes
 
 import { getFocusable } from './lib/getFocusable.mjs'
 import { getMiddle, getTopLeft } from './lib/positions.mjs'
+import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.js'
 import { strategy } from './lib/strategies.js'
 import { sumBy } from './lib/sumBy.mjs'
 
@@ -35,7 +35,20 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         return
       }
 
-      const nothingHasFocus = document.activeElement === document.body
+      // TODO: Use modifierKey
+      if (event.shiftKey) {
+        return
+      }
+
+      const activeElement = document.activeElement
+
+      if (!activeElement) {
+        return
+      }
+
+      preventNativeArrowKeyPresses({ event, activeElement })
+
+      const nothingHasFocus = activeElement === document.body
       if (nothingHasFocus) {
         const firstFocusable = getFocusable()?.[0]
         if (firstFocusable instanceof HTMLElement) {
@@ -43,12 +56,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
           console.log('firstFocusable', firstFocusable)
           return
         }
-      }
-
-      const activeElement = document.activeElement
-
-      if (!activeElement) {
-        return
       }
 
       if (
@@ -114,32 +121,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
           const start = selectionStart
           if (start <= lengthUntilLastRow + 1) {
             return
-          }
-        }
-      }
-
-      const inputTypesThatNeedModifierKey: Record<string, string[]> = {
-        date: ['ArrowDown', 'ArrowUp'],
-        time: ['ArrowDown', 'ArrowUp'],
-        datetime: ['ArrowDown', 'ArrowUp'],
-        'datetime-local': ['ArrowDown', 'ArrowUp'],
-        month: ['ArrowDown', 'ArrowUp'],
-        week: ['ArrowDown', 'ArrowUp'],
-        number: ['ArrowDown', 'ArrowUp'],
-        range: ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'],
-      }
-
-      if (activeElement instanceof HTMLInputElement) {
-        const inputType = activeElement.type
-        if (
-          inputTypesThatNeedModifierKey[inputType] &&
-          inputTypesThatNeedModifierKey[inputType].includes(event.key)
-        ) {
-          // TODO: Use modifierKey
-          if (!event.shiftKey) {
-            return
-          } else {
-            event.preventDefault()
           }
         }
       }
