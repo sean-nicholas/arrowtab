@@ -1,4 +1,5 @@
 const inputTypesWithAllowedNativeArrowKeyPresses: Record<string, string[]> = {
+  text: ['ArrowLeft', 'ArrowRight'],
   date: ['ArrowLeft', 'ArrowRight'],
   time: ['ArrowLeft', 'ArrowRight'],
   datetime: ['ArrowLeft', 'ArrowRight'],
