@@ -15,7 +15,7 @@ import { sumBy } from './lib/sumBy.mjs'
 
 let inDebugMode = false
 
-export const initArrowTab = () => {
+export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
   document.addEventListener(
     'keydown',
     (event) => {
@@ -221,11 +221,7 @@ export const initArrowTab = () => {
       //   nearest = _.first(ordered)
       // }
 
-      if (!event.ctrlKey) {
-        if (nearest.element instanceof HTMLElement) {
-          nearest.element.focus()
-        }
-      } else {
+      if (debug && event.ctrlKey) {
         if (inDebugMode) {
           document
             .querySelectorAll('[data-arrowtab="debug"]')
@@ -273,6 +269,12 @@ export const initArrowTab = () => {
 
           document.body.appendChild(div)
         }
+
+        return
+      }
+
+      if (nearest.element instanceof HTMLElement) {
+        nearest.element.focus()
       }
     },
     { capture: true },
