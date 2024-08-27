@@ -14,7 +14,6 @@
 
 import { getFocusable } from './lib/getFocusable.mjs'
 import { hasTextSelection } from './lib/hasTextSelection.mjs'
-import { getTopLeft } from './lib/positions.mjs'
 import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.mjs'
 import { getByDirection } from './lib/strategies.mjs'
 
@@ -96,19 +95,18 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         for (const focusable of sorted) {
           if (!(focusable.element instanceof HTMLElement)) continue
           const div = document.createElement('div')
+          const rect = focusable.element.getBoundingClientRect()
+          const scrollX = document.documentElement.scrollLeft
+          const scrollY = document.documentElement.scrollTop
+
           div.style.position = 'absolute'
-          div.style.top = getTopLeft(focusable.element).y + 'px'
-          div.style.left = getTopLeft(focusable.element).x + 'px'
-          let width = focusable.element.offsetWidth
-          let height = focusable.element.offsetHeight
-          if (width < 10) {
-            width = 10
-          }
-          if (height < 10) {
-            height = 10
-          }
-          div.style.width = width + 'px'
-          div.style.height = height + 'px'
+          div.style.top = `${rect.top + scrollY}px`
+          div.style.left = `${rect.left + scrollX}px`
+          let width = Math.max(rect.width, 10)
+          let height = Math.max(rect.height, 10)
+          div.style.width = `${width}px`
+          div.style.height = `${height}px`
+
           const color = focusable.withinReach ? 'green' : 'red'
           div.style.border = `1px solid ${color}`
           div.style.color = 'white'
@@ -117,12 +115,29 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
           div.style.display = 'flex'
           div.style.alignItems = 'center'
           div.style.justifyContent = 'center'
+          div.style.pointerEvents = 'none' // Allow clicking through the debug overlay
 
           div.innerHTML = `<div>${counter++} ${
             focusable.withinReach ? `(${withinReachCounter++})` : ''
           }</div>`
-          ;(div as any).focusable = focusable
           div.dataset.arrowtab = 'debug'
+
+          // Move the click event to the focusable element
+          focusable.element.addEventListener('click', (e) => {
+            e.preventDefault()
+            console.log({
+              focusable,
+              rect,
+              div,
+              divRect: div.getBoundingClientRect(),
+              top: div.style.top,
+              left: div.style.left,
+              width: div.style.width,
+              height: div.style.height,
+              scrollX,
+              scrollY
+            })
+          })
 
           document.body.appendChild(div)
         }
