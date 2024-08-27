@@ -1,6 +1,7 @@
 import { getEuclideanDistance } from './distances.mjs'
 import { getAngle } from './getAngle.mjs'
 import { getXyDistance } from './getXyDistance.mjs'
+import { sumBy } from './sumBy.mjs'
 
 const getIsWithinXWalk = ({
   angle,
@@ -71,7 +72,7 @@ export const getByDirection: Strategy = ({
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       return {
         element,
-        distance: distances.yDistance,
+        likelihood: Math.abs(distances.yDistance) * 10_000 + Math.abs(distances.xDistance),
         withinReach:
           event.key === 'ArrowDown'
             ? distances.yDistance > 0
@@ -82,7 +83,7 @@ export const getByDirection: Strategy = ({
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       return {
         element,
-        distance: distances.xDistance,
+        likelihood: Math.abs(distances.xDistance) * 10_000 + Math.abs(distances.yDistance),
         withinReach:
           event.key === 'ArrowRight'
             ? distances.xDistance > 0
@@ -92,13 +93,15 @@ export const getByDirection: Strategy = ({
 
     return {
       element,
-      distance: Number.POSITIVE_INFINITY,
+      likelihood: 0,
       withinReach: false,
     }
   })
 
+  const sumLikelihood = sumBy(withData, d => d.likelihood)
+
   const sorted = withData.sort((a, b) => {
-    return a.distance - b.distance
+    return (a.likelihood / sumLikelihood) - (b.likelihood / sumLikelihood)
   })
 
   return sorted

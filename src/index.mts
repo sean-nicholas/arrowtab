@@ -16,7 +16,7 @@ import { getFocusable } from './lib/getFocusable.mjs'
 import { hasTextSelection } from './lib/hasTextSelection.mjs'
 import { getTopLeft } from './lib/positions.mjs'
 import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.mjs'
-import { getByXWalkEuclidean } from './lib/strategies.mjs'
+import { getByDirection } from './lib/strategies.mjs'
 
 let inDebugMode = false
 
@@ -64,7 +64,7 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         (element) => element !== activeElement,
       )
 
-      const sorted = getByXWalkEuclidean({
+      const sorted = getByDirection({
         focusableElements: withoutActiveElement,
         activeElement,
         event,
