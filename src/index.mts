@@ -8,6 +8,11 @@
 // eventTriggerName: 'keydown' | 'keyup',
 // earlyReturn: (event) => boolean, // TODO: Better name
 
+// TODO: Check if tab focuses the same elements as arrowTab
+// TODO: select, details, summary, iframe
+// TODO: Decide if modifierKey should be used to focus next element or to enable the native input behavior
+// TODO: Investigate links that don't show focus outline sometimes
+
 import { getFocusable } from './lib/getFocusable.mjs'
 import { getMiddle, getTopLeft } from './lib/positions.mjs'
 import { strategy } from './lib/strategies.js'
