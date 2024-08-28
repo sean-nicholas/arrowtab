@@ -12,17 +12,26 @@
 // TODO: select, details, summary, iframe
 // TODO: Investigate links that don't show focus outline sometimes
 
+import {
+  activateDebugMode,
+  deactivateDebugMode,
+  isInDebugMode,
+} from './lib/debugMode.mjs'
 import { getFocusable } from './lib/getFocusable.mjs'
 import { hasTextSelection } from './lib/hasTextSelection.mjs'
 import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.mjs'
 import { getByGrid } from './lib/strategies.mjs'
 
-let inDebugMode = false
-
 export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
   document.addEventListener(
     'keydown',
     (event) => {
+      console.log({ event })
+      if (event.key === 'Escape' && isInDebugMode()) {
+        deactivateDebugMode()
+        return
+      }
+
       if (
         event.key !== 'ArrowLeft' &&
         event.key !== 'ArrowRight' &&
@@ -67,7 +76,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         focusableElements: withoutActiveElement,
         activeElement,
         event,
-        inDebugMode,
       })
 
       const withinReach = sorted.filter(({ withinReach }) => withinReach)
@@ -79,63 +87,11 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
       }
 
       if (debug && event.ctrlKey) {
-        if (inDebugMode) {
-          document
-            .querySelectorAll('[data-arrowtab="debug"]')
-            .forEach((div) => {
-              div.remove()
-            })
-          inDebugMode = false
-          return
+        if (isInDebugMode()) {
+          deactivateDebugMode()
         }
 
-        inDebugMode = true
-
-        let counter = 1
-        let withinReachCounter = 1
-        for (const focusable of sorted) {
-          if (!(focusable.element instanceof HTMLElement)) continue
-          const div = document.createElement('div')
-          const rect = focusable.element.getBoundingClientRect()
-          const scrollX = document.documentElement.scrollLeft
-          const scrollY = document.documentElement.scrollTop
-
-          div.style.position = 'absolute'
-          div.style.top = `${rect.top + scrollY}px`
-          div.style.left = `${rect.left + scrollX}px`
-          let width = Math.max(rect.width, 10)
-          let height = Math.max(rect.height, 10)
-          div.style.width = `${width}px`
-          div.style.height = `${height}px`
-
-          const color = focusable.withinReach
-            ? 'rgba(76 175 80 / 80%)'
-            : 'rgb(244 67 54 / 80%)'
-          div.style.color = 'white'
-          div.style.backgroundColor = color
-          div.style.zIndex = '100000'
-          div.style.display = 'flex'
-          div.style.alignItems = 'center'
-          div.style.justifyContent = 'center'
-          div.style.cursor = 'pointer'
-
-          div.innerHTML = `<div>${counter++} ${
-            focusable.withinReach ? `(${withinReachCounter++})` : ''
-          }</div>`
-          div.dataset.arrowtab = 'debug'
-
-          // Move the click event to the focusable element
-          div.addEventListener('click', (e) => {
-            e.preventDefault()
-            console.log({
-              focusable,
-              rect,
-            })
-          })
-
-          document.body.appendChild(div)
-        }
-
+        activateDebugMode({ focusableElements: sorted })
         return
       }
 

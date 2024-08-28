@@ -32,7 +32,6 @@ type Strategy = (options: {
   event: KeyboardEvent
   focusableElements: Element[]
   activeElement: Element
-  inDebugMode?: boolean
 }) => { element: Element; withinReach: boolean }[]
 
 export const getByXWalkEuclidean: Strategy = ({
