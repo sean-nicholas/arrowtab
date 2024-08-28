@@ -26,7 +26,6 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
   document.addEventListener(
     'keydown',
     (event) => {
-      console.log({ event })
       if (event.key === 'Escape' && isInDebugMode()) {
         deactivateDebugMode()
         return
