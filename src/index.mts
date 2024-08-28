@@ -15,7 +15,7 @@
 import { getFocusable } from './lib/getFocusable.mjs'
 import { hasTextSelection } from './lib/hasTextSelection.mjs'
 import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.mjs'
-import { getByDirection } from './lib/strategies.mjs'
+import { getByGrid } from './lib/strategies.mjs'
 
 let inDebugMode = false
 
@@ -63,7 +63,7 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         (element) => element !== activeElement,
       )
 
-      const sorted = getByDirection({
+      const sorted = getByGrid({
         focusableElements: withoutActiveElement,
         activeElement,
         event,

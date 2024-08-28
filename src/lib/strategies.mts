@@ -62,7 +62,7 @@ export const getByXWalkEuclidean: Strategy = ({
   return sorted
 }
 
-export const getByDirection: Strategy = ({
+export const getByGrid: Strategy = ({
   focusableElements,
   activeElement,
   event,
@@ -82,16 +82,19 @@ export const getByDirection: Strategy = ({
       }
     }
 
-    // if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-    //   return {
-    //     element,
-    //     likelihood: Math.abs(distances.xDistance) * 10_000 + Math.abs(distances.yDistance),
-    //     withinReach:
-    //       event.key === 'ArrowRight'
-    //         ? distances.xDistance > 0
-    //         : distances.xDistance < 0,
-    //   }
-    // }
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      const correctDirection =
+        event.key === 'ArrowRight'
+          ? distances.xDistance > 0
+          : distances.xDistance < 0
+      const isSameYAsActiveElement = distances.yDistance === 0
+      return {
+        element,
+        primaryDistance: Math.abs(distances.xDistance),
+        secondaryDistance: 0,
+        withinReach: correctDirection && isSameYAsActiveElement,
+      }
+    }
 
     return {
       element,
@@ -101,21 +104,29 @@ export const getByDirection: Strategy = ({
     }
   })
 
-  const minPrimaryDistance = Math.min(...withData.map((item) => {
-    if (!item.withinReach) {
-      return Infinity
-    }
-    return item.primaryDistance
-  }))
-
+  const minPrimaryDistance = Math.min(
+    ...withData.map((item) => {
+      if (!item.withinReach) {
+        return Infinity
+      }
+      return item.primaryDistance
+    }),
+  )
 
   const sorted = withData.sort((a, b) => {
     if (inDebugMode) {
-      console.log({ minPrimaryDistance})
+      console.log({ minPrimaryDistance })
     }
-    if (a.primaryDistance === minPrimaryDistance && b.primaryDistance === minPrimaryDistance) {
+    if (
+      a.primaryDistance === minPrimaryDistance &&
+      b.primaryDistance === minPrimaryDistance
+    ) {
       if (inDebugMode) {
-        console.log({a: a.secondaryDistance, b: b.secondaryDistance, diff: a.secondaryDistance - b.secondaryDistance})
+        console.log({
+          a: a.secondaryDistance,
+          b: b.secondaryDistance,
+          diff: a.secondaryDistance - b.secondaryDistance,
+        })
       }
       return a.secondaryDistance - b.secondaryDistance
     }
