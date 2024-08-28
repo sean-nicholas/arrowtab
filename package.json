@@ -13,7 +13,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"tsc --watch\" \"http-server -o --cors\"",
     "build": "rm -rf dist && tsc",
-    "prepublish": "pnpm clean && pnpm build"
+    "prepublish": "pnpm clean && pnpm build",
+    "ci": "npm run build && npm run check-format",
+    "format": "prettier --write .",
+    "check-format": "prettier --check ."
   },
   "author": "Sean Nicholas",
   "license": "MIT",
@@ -21,6 +24,7 @@
   "devDependencies": {
     "concurrently": "^8.2.2",
     "http-server": "^14.1.1",
+    "prettier": "^3.3.3",
     "typescript": "^5.5.4"
   },
   "homepage": "https://github.com/sean-nicholas/arrowtab",
