@@ -66,7 +66,6 @@ export const getByGrid: Strategy = ({
   focusableElements,
   activeElement,
   event,
-  inDebugMode = false,
 }) => {
   const withData = focusableElements.map((element) => {
     const distances = getXyDistance({ activeElement, element })
@@ -114,20 +113,10 @@ export const getByGrid: Strategy = ({
   )
 
   const sorted = withData.sort((a, b) => {
-    if (inDebugMode) {
-      console.log({ minPrimaryDistance })
-    }
     if (
       a.primaryDistance === minPrimaryDistance &&
       b.primaryDistance === minPrimaryDistance
     ) {
-      if (inDebugMode) {
-        console.log({
-          a: a.secondaryDistance,
-          b: b.secondaryDistance,
-          diff: a.secondaryDistance - b.secondaryDistance,
-        })
-      }
       return a.secondaryDistance - b.secondaryDistance
     }
 
