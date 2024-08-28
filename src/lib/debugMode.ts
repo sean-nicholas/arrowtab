@@ -34,6 +34,7 @@ export const activateDebugMode = ({
     div.style.alignItems = 'center'
     div.style.justifyContent = 'center'
     div.style.cursor = 'pointer'
+    div.style.borderRadius = '4px'
 
     div.innerHTML = `<div>${counter++} ${
       focusable.withinReach ? `(${withinReachCounter++})` : ''
