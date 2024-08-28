@@ -67,6 +67,7 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         focusableElements: withoutActiveElement,
         activeElement,
         event,
+        inDebugMode,
       })
 
       const withinReach = sorted.filter(({ withinReach }) => withinReach)

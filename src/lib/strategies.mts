@@ -1,7 +1,6 @@
 import { getEuclideanDistance } from './distances.mjs'
 import { getAngle } from './getAngle.mjs'
 import { getXyDistance } from './getXyDistance.mjs'
-import { sumBy } from './sumBy.mjs'
 
 const getIsWithinXWalk = ({
   angle,
@@ -33,6 +32,7 @@ type Strategy = (options: {
   event: KeyboardEvent
   focusableElements: Element[]
   activeElement: Element
+  inDebugMode?: boolean
 }) => { element: Element; withinReach: boolean }[]
 
 export const getByXWalkEuclidean: Strategy = ({
@@ -66,13 +66,15 @@ export const getByDirection: Strategy = ({
   focusableElements,
   activeElement,
   event,
+  inDebugMode = false,
 }) => {
   const withData = focusableElements.map((element) => {
     const distances = getXyDistance({ activeElement, element })
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       return {
         element,
-        likelihood: Math.abs(distances.yDistance) * 10_000 + Math.abs(distances.xDistance),
+        primaryDistance: Math.abs(distances.yDistance),
+        secondaryDistance: Math.abs(distances.xDistance),
         withinReach:
           event.key === 'ArrowDown'
             ? distances.yDistance > 0
@@ -80,28 +82,45 @@ export const getByDirection: Strategy = ({
       }
     }
 
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      return {
-        element,
-        likelihood: Math.abs(distances.xDistance) * 10_000 + Math.abs(distances.yDistance),
-        withinReach:
-          event.key === 'ArrowRight'
-            ? distances.xDistance > 0
-            : distances.xDistance < 0,
-      }
-    }
+    // if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    //   return {
+    //     element,
+    //     likelihood: Math.abs(distances.xDistance) * 10_000 + Math.abs(distances.yDistance),
+    //     withinReach:
+    //       event.key === 'ArrowRight'
+    //         ? distances.xDistance > 0
+    //         : distances.xDistance < 0,
+    //   }
+    // }
 
     return {
       element,
-      likelihood: 0,
+      primaryDistance: Infinity,
+      secondaryDistance: Infinity,
       withinReach: false,
     }
   })
 
-  const sumLikelihood = sumBy(withData, d => d.likelihood)
+  const minPrimaryDistance = Math.min(...withData.map((item) => {
+    if (item.withinReach) {
+      return item.primaryDistance
+    }
+    return Infinity
+  }))
+
 
   const sorted = withData.sort((a, b) => {
-    return (a.likelihood / sumLikelihood) - (b.likelihood / sumLikelihood)
+    if (inDebugMode) {
+      console.log({ minPrimaryDistance})
+    }
+    if (a.primaryDistance === minPrimaryDistance && b.primaryDistance === minPrimaryDistance) {
+      if (inDebugMode) {
+        console.log({a: a.secondaryDistance, b: b.secondaryDistance, diff: a.secondaryDistance - b.secondaryDistance})
+      }
+      return a.secondaryDistance - b.secondaryDistance
+    }
+
+    return a.primaryDistance - b.primaryDistance
   })
 
   return sorted
