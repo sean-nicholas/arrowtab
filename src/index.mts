@@ -115,7 +115,7 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
           div.style.display = 'flex'
           div.style.alignItems = 'center'
           div.style.justifyContent = 'center'
-          div.style.pointerEvents = 'none' // Allow clicking through the debug overlay
+          div.style.cursor = 'pointer'
 
           div.innerHTML = `<div>${counter++} ${
             focusable.withinReach ? `(${withinReachCounter++})` : ''
@@ -123,19 +123,11 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
           div.dataset.arrowtab = 'debug'
 
           // Move the click event to the focusable element
-          focusable.element.addEventListener('click', (e) => {
+          div.addEventListener('click', (e) => {
             e.preventDefault()
             console.log({
               focusable,
               rect,
-              div,
-              divRect: div.getBoundingClientRect(),
-              top: div.style.top,
-              left: div.style.left,
-              width: div.style.width,
-              height: div.style.height,
-              scrollX,
-              scrollY
             })
           })
 
