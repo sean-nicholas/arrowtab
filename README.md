@@ -33,3 +33,27 @@ import { initArrowTab } from 'arrowtab'
 
 initArrowTab()
 ```
+
+## Development
+
+```sh
+pnpm dev
+```
+
+Add this code to your app:
+
+```js
+import { initArrowTab } from 'http://localhost:8080/dist/index.js'
+
+initArrowTab()
+```
+
+Or as a script tag:
+
+```html
+<script type="module">
+  import { initArrowTab } from 'http://localhost:8080/dist/index.js'
+
+  initArrowTab()
+</script>
+```
