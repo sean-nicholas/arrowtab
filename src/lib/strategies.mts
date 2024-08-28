@@ -102,10 +102,10 @@ export const getByDirection: Strategy = ({
   })
 
   const minPrimaryDistance = Math.min(...withData.map((item) => {
-    if (item.withinReach) {
-      return item.primaryDistance
+    if (!item.withinReach) {
+      return Infinity
     }
-    return Infinity
+    return item.primaryDistance
   }))
 
 
