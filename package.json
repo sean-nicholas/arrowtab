@@ -2,12 +2,11 @@
   "name": "arrowtab",
   "version": "0.0.2",
   "description": "",
-  "main": "dist/index.mjs",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"tsc --watch\" \"http-server -o --cors\"",
-    "build": "tsc",
-    "clean": "rm -rf dist",
+    "build": "rm -rf dist && tsc",
     "prepublish": "pnpm clean && pnpm build"
   },
   "keywords": [],

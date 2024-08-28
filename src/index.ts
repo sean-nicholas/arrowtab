@@ -16,11 +16,11 @@ import {
   activateDebugMode,
   deactivateDebugMode,
   isInDebugMode,
-} from './lib/debugMode.mjs'
-import { getFocusable } from './lib/getFocusable.mjs'
-import { hasTextSelection } from './lib/hasTextSelection.mjs'
-import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.mjs'
-import { getByGrid } from './lib/strategies.mjs'
+} from './lib/debugMode.js'
+import { getFocusable } from './lib/getFocusable.js'
+import { hasTextSelection } from './lib/hasTextSelection.js'
+import { preventNativeArrowKeyPresses } from './lib/preventNativeArrowKeyPresses.js'
+import { getByGrid } from './lib/strategies.js'
 
 export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
   document.addEventListener(

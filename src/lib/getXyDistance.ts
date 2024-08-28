@@ -1,4 +1,4 @@
-import { getMiddle } from './positions.mjs'
+import { getMiddle } from './positions.js'
 
 export const getXyDistance = ({
   activeElement,

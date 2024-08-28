@@ -1,4 +1,4 @@
-import { sumBy } from './sumBy.mjs'
+import { sumBy } from './sumBy.js'
 
 export const hasTextSelection = ({
   activeElement,

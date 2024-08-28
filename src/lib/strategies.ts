@@ -1,6 +1,6 @@
-import { getEuclideanDistance } from './distances.mjs'
-import { getAngle } from './getAngle.mjs'
-import { getXyDistance } from './getXyDistance.mjs'
+import { getEuclideanDistance } from './distances.js'
+import { getAngle } from './getAngle.js'
+import { getXyDistance } from './getXyDistance.js'
 
 const getIsWithinXWalk = ({
   angle,

@@ -1,4 +1,4 @@
-import { getXyDistance } from './getXyDistance.mjs'
+import { getXyDistance } from './getXyDistance.js'
 
 export const getAngle = ({
   activeElement,
