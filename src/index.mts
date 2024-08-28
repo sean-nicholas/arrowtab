@@ -108,8 +108,9 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
           div.style.width = `${width}px`
           div.style.height = `${height}px`
 
-          const color = focusable.withinReach ? 'green' : 'red'
-          div.style.border = `1px solid ${color}`
+          const color = focusable.withinReach
+            ? 'rgba(76 175 80 / 80%)'
+            : 'rgb(244 67 54 / 80%)'
           div.style.color = 'white'
           div.style.backgroundColor = color
           div.style.zIndex = '100000'
