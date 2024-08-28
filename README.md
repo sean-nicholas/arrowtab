@@ -40,7 +40,9 @@ initArrowTab()
 pnpm dev
 ```
 
-Add this code to your app:
+A demo page will open in your browser / at `http://localhost:8080`.
+
+If you want to use the library in your app, you can use the following code:
 
 ```js
 import { initArrowTab } from 'http://localhost:8080/dist/index.js'
