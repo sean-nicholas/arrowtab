@@ -1,7 +1,13 @@
 {
   "name": "arrowtab",
   "version": "0.0.2",
-  "description": "",
+  "description": "Use arrow keys to \"tab\" between focusable elements",
+  "keywords": [
+    "arrowkeys",
+    "tab",
+    "focus",
+    "navigation"
+  ],
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -9,13 +15,23 @@
     "build": "rm -rf dist && tsc",
     "prepublish": "pnpm clean && pnpm build"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Sean Nicholas",
   "license": "MIT",
   "type": "module",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "http-server": "^14.1.1",
     "typescript": "^5.5.4"
-  }
+  },
+  "homepage": "https://github.com/sean-nicholas/arrowtab",
+  "bugs": {
+    "url": "https://github.com/sean-nicholas/arrowtab/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sean-nicholas/arrowtab.git"
+  },
+  "files": [
+    "dist"
+  ]
 }
