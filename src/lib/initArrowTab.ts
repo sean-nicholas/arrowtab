@@ -21,6 +21,7 @@ import { getByGrid } from './strategies.js'
 // TODO: Check if tab focuses the same elements as arrowTab
 // TODO: select, details, summary, iframe
 // TODO: Investigate links that don't show focus outline sometimes
+// TODO: Add cleanup method for useEffect
 
 export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
   document.addEventListener(
