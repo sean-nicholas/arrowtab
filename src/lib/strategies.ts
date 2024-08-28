@@ -81,6 +81,7 @@ export const getByGrid: Strategy = ({
     }
 
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      // TODO: Maybe not only exact matches. Maybe height of element + x% is search space. If it hits only top/left or bottom/right, then it's within reach.
       const correctDirection =
         event.key === 'ArrowRight'
           ? distances.xDistance > 0
