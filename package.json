@@ -10,11 +10,11 @@
   ],
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "dev": "concurrently \"tsc --watch\" \"http-server -o --cors\"",
     "build": "rm -rf dist && tsc",
     "prepublish": "pnpm clean && pnpm build",
-    "ci": "pnpm run build && pnpm run check-format && pnpm run check-exports",
+    "ci": "pnpm run build && pnpm run check-format && pnpm run check-exports && pnpm run test",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
     "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm"
@@ -27,7 +27,8 @@
     "concurrently": "^8.2.2",
     "http-server": "^14.1.1",
     "prettier": "^3.3.3",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
   },
   "homepage": "https://github.com/sean-nicholas/arrowtab",
   "bugs": {
