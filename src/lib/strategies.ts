@@ -68,8 +68,15 @@ export const getByGrid: Strategy = ({
 }) => {
   const withData = focusableElements.map((element) => {
     const distances = getXyDistance({ activeElement, element })
+    let result = {
+      element,
+      primaryDistance: Infinity,
+      secondaryDistance: Infinity,
+      withinReach: false,
+    }
+
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      return {
+      result = {
         element,
         primaryDistance: Math.abs(distances.yDistance),
         secondaryDistance: Math.abs(distances.xDistance),
@@ -87,7 +94,7 @@ export const getByGrid: Strategy = ({
           ? distances.xDistance > 0
           : distances.xDistance < 0
       const isSameYAsActiveElement = distances.yDistance === 0
-      return {
+      result = {
         element,
         primaryDistance: Math.abs(distances.xDistance),
         secondaryDistance: 0,
@@ -95,12 +102,14 @@ export const getByGrid: Strategy = ({
       }
     }
 
-    return {
-      element,
-      primaryDistance: Infinity,
-      secondaryDistance: Infinity,
-      withinReach: false,
+    // If the parent is focusable then weird things can happen if you toggle trough the children because
+    // this strategy will look at the middle of an element. It is possible to select the parent while going right.
+    // Therefore we ignore the parent.
+    if (element.contains(activeElement)) {
+      result.withinReach = false
     }
+
+    return result
   })
 
   const minPrimaryDistance = Math.min(
