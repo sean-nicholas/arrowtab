@@ -7,9 +7,11 @@ export const activateDebugMode = ({
 }) => {
   inDebugMode = true
 
-  let counter = 1
-  let withinReachCounter = 1
-  for (const focusable of focusableElements) {
+  let counter = focusableElements.length
+  let withinReachCounter = focusableElements.filter(
+    (focusable) => focusable.withinReach,
+  ).length
+  for (const focusable of [...focusableElements].reverse()) {
     if (!(focusable.element instanceof HTMLElement)) continue
     const div = document.createElement('div')
     const rect = focusable.element.getBoundingClientRect()
@@ -36,17 +38,19 @@ export const activateDebugMode = ({
     div.style.cursor = 'pointer'
     div.style.borderRadius = '4px'
 
-    div.innerHTML = `<div>${counter++} ${
-      focusable.withinReach ? `(${withinReachCounter++})` : ''
+    div.innerHTML = `<div>${counter--} ${
+      focusable.withinReach ? `(${withinReachCounter--})` : ''
     }</div>`
     div.dataset.arrowtab = 'debug'
 
     // Move the click event to the focusable element
     div.addEventListener('click', (e) => {
       e.preventDefault()
+      e.stopPropagation()
       console.log({
         focusable,
         rect,
+        debugElement: div,
       })
     })
 
