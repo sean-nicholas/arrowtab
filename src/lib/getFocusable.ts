@@ -7,6 +7,27 @@ export const getFocusable = () => {
     if ('disabled' in element && element.disabled) return false
     if ('hidden' in element && element.hidden) return false
     if (element.getAttribute('aria-hidden') === 'true') return false
+
+    // Filter out non-visible elements
+    const style = window.getComputedStyle(element)
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.opacity === '0'
+    ) {
+      return false
+    }
+
+    // Check if element or any of its ancestors have zero dimensions
+    let currentElement: Element | null = element
+    while (currentElement) {
+      const rect = currentElement.getBoundingClientRect()
+      if (rect.width === 0 && rect.height === 0) {
+        return false
+      }
+      currentElement = currentElement.parentElement
+    }
+
     return true
   })
   return focusable
