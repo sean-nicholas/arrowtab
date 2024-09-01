@@ -31,10 +31,34 @@ npm install arrowtab
 
 ## Usage
 
+Vanilla JS:
+
 ```ts
 import { initArrowTab } from 'arrowtab'
 
 initArrowTab()
+```
+
+React:
+
+```tsx
+'use client'
+
+import { useEffect } from 'react'
+import { initArrowTab } from 'arrowtab'
+
+export const ArrowTab = () => {
+  useEffect(() => {
+    const { cleanup } = initArrowTab()
+
+    return () => {
+      cleanup()
+    }
+  }, [])
+
+  return null
+}
+
 ```
 
 ### Cleanup
