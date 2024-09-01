@@ -1,1 +1,1 @@
-export { initArrowTab } from './lib/initArrowTab.js'
+export { initArrowTab } from './lib/arrowTab.js'

@@ -31,10 +31,20 @@ npm install arrowtab
 
 ## Usage
 
-```js
+```ts
 import { initArrowTab } from 'arrowtab'
 
 initArrowTab()
+```
+
+### Cleanup
+
+If you want to remove the ArrowTab event listener, you can call the `cleanup` function. This is useful if you use ArrowTab in a `useEffect` hook.
+
+```ts
+const { cleanup } = initArrowTab()
+
+cleanup()
 ```
 
 ## data-arrowtab
@@ -60,7 +70,7 @@ A demo page will open in your browser / at `http://localhost:8080`.
 
 If you want to use the library in your app, you can use the following code:
 
-```js
+```ts
 import { initArrowTab } from 'http://localhost:8080/dist/index.js'
 
 initArrowTab()
