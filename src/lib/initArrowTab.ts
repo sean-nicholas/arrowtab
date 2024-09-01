@@ -80,18 +80,18 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
 
       const withinReach = sorted.filter(({ withinReach }) => withinReach)
 
-      let nearest = withinReach.at(0)
-
-      if (!nearest) {
-        return
-      }
-
       if (debug && event.ctrlKey) {
         if (isInDebugMode()) {
           deactivateDebugMode()
         }
 
         activateDebugMode({ focusableElements: sorted })
+        return
+      }
+
+      let nearest = withinReach.at(0)
+
+      if (!nearest) {
         return
       }
 
