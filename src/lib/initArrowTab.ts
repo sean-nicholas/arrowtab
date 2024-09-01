@@ -50,10 +50,16 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
       const activeElement = document.activeElement
 
       if (!activeElement) {
+        if (debug) {
+          console.log('no active element')
+        }
         return
       }
 
       if (hasDisabledKeys({ event, activeElement })) {
+        if (debug) {
+          console.log('arrow keys are disabled')
+        }
         return
       }
 
@@ -61,6 +67,9 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
 
       const nothingHasFocus = activeElement === document.body
       if (nothingHasFocus) {
+        if (debug) {
+          console.log('nothing has focus. using first focusable')
+        }
         const firstFocusable = getFocusable()?.[0]
         if (firstFocusable instanceof HTMLElement) {
           firstFocusable.focus()
@@ -69,6 +78,9 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
       }
 
       if (hasTextSelection({ activeElement, event })) {
+        if (debug) {
+          console.log('element has text selection')
+        }
         return
       }
 
@@ -96,11 +108,18 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
 
       let nearest = withinReach.at(0)
 
+      if (debug) {
+        console.log('found nearest element to select', nearest)
+      }
+
       if (!nearest) {
         return
       }
 
       if (nearest.element instanceof HTMLElement) {
+        if (debug) {
+          console.log('focusing element', nearest)
+        }
         nearest.element.focus()
       }
     },
