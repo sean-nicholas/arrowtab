@@ -4,6 +4,7 @@ import {
   isInDebugMode,
 } from './debugMode.js'
 import { getFocusable } from './getFocusable.js'
+import { hasDisabledKeys } from './hasDisabledKeys.js'
 import { hasTextSelection } from './hasTextSelection.js'
 import { preventNativeArrowKeyPresses } from './preventNativeArrowKeyPresses.js'
 import { getByGrid } from './strategies.js'
@@ -49,6 +50,10 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
       const activeElement = document.activeElement
 
       if (!activeElement) {
+        return
+      }
+
+      if (hasDisabledKeys({ event, activeElement })) {
         return
       }
 
