@@ -5,22 +5,21 @@ export const getFocusable = () => {
   )
   const focusable = Array.from(allFocusable).filter((element) => {
     if ('disabled' in element && element.disabled) return false
-    if ('hidden' in element && element.hidden) return false
-    if (element.getAttribute('aria-hidden') === 'true') return false
 
-    // Filter out non-visible elements
-    const style = window.getComputedStyle(element)
-    if (
-      style.display === 'none' ||
-      style.visibility === 'hidden' ||
-      style.opacity === '0'
-    ) {
-      return false
-    }
-
-    // Check if element or any of its ancestors have zero dimensions
     let currentElement: Element | null = element
     while (currentElement) {
+      if ('hidden' in currentElement && currentElement.hidden) return false
+      if (currentElement.getAttribute('aria-hidden') === 'true') return false
+
+      const style = window.getComputedStyle(currentElement)
+      if (
+        style.display === 'none' ||
+        style.visibility === 'hidden' ||
+        style.opacity === '0'
+      ) {
+        return false
+      }
+
       const rect = currentElement.getBoundingClientRect()
       if (rect.width === 0 && rect.height === 0) {
         return false
