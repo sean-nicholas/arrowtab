@@ -66,54 +66,79 @@ export const getByGrid: Strategy = ({
   activeElement,
   event,
 }) => {
-  const withData = focusableElements.map((element) => {
-    const distances = getXyDistance({ activeElement, element })
-    let result = {
-      element,
-      primaryDistance: Infinity,
-      secondaryDistance: Infinity,
-      withinReach: false,
+  let items = focusableElements
+    .map((element) => {
+      const distances = getXyDistance({ activeElement, element })
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        return {
+          element,
+          primaryDistance: Math.abs(distances.yDistance),
+          secondaryDistance: Math.abs(distances.xDistance),
+          withinReach:
+            event.key === 'ArrowDown'
+              ? distances.yDistance > 0
+              : distances.yDistance < 0,
+        }
+      }
+
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        // TODO: Maybe not only exact matches. Maybe height of element + x% is search space. If it hits only top/left or bottom/right, then it's within reach.
+        const correctDirection =
+          event.key === 'ArrowRight'
+            ? distances.xDistance > 0
+            : distances.xDistance < 0
+        const isSameYAsActiveElement = distances.yDistance === 0
+        return {
+          element,
+          primaryDistance: Math.abs(distances.xDistance),
+          secondaryDistance: 0,
+          withinReach: correctDirection && isSameYAsActiveElement,
+        }
+      }
+
+      return {
+        element,
+        primaryDistance: Infinity,
+        secondaryDistance: Infinity,
+        withinReach: false,
+      }
+    })
+    .map((item) => {
+      // If the parent is focusable then weird things can happen. It is possible to select the parent while going right.
+      return {
+        ...item,
+        containsActiveElement: item.element.contains(activeElement),
+      }
+    })
+
+  items = items.map((item) => {
+    if (!item.containsActiveElement) {
+      return item
     }
 
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-      result = {
-        element,
-        primaryDistance: Math.abs(distances.yDistance),
-        secondaryDistance: Math.abs(distances.xDistance),
-        withinReach:
-          event.key === 'ArrowDown'
-            ? distances.yDistance > 0
-            : distances.yDistance < 0,
+    const anyOtherItemWithinReach = items.some((other) => {
+      if (other === item) return false
+      if (other.containsActiveElement) return false
+      if (!other.withinReach) return false
+      return true
+    })
+
+    if (anyOtherItemWithinReach) {
+      // if there is another item within reach, then the parent is not focusable
+      return {
+        ...item,
+        withinReach: false,
       }
     }
 
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      // TODO: Maybe not only exact matches. Maybe height of element + x% is search space. If it hits only top/left or bottom/right, then it's within reach.
-      const correctDirection =
-        event.key === 'ArrowRight'
-          ? distances.xDistance > 0
-          : distances.xDistance < 0
-      const isSameYAsActiveElement = distances.yDistance === 0
-      result = {
-        element,
-        primaryDistance: Math.abs(distances.xDistance),
-        secondaryDistance: 0,
-        withinReach: correctDirection && isSameYAsActiveElement,
-      }
+    return {
+      ...item,
+      withinReach: true,
     }
-
-    // If the parent is focusable then weird things can happen if you toggle trough the children because
-    // this strategy will look at the middle of an element. It is possible to select the parent while going right.
-    // Therefore we ignore the parent.
-    if (element.contains(activeElement)) {
-      result.withinReach = false
-    }
-
-    return result
   })
 
   const minPrimaryDistance = Math.min(
-    ...withData.map((item) => {
+    ...items.map((item) => {
       if (!item.withinReach) {
         return Infinity
       }
@@ -121,7 +146,7 @@ export const getByGrid: Strategy = ({
     }),
   )
 
-  const sorted = withData.sort((a, b) => {
+  const sorted = items.sort((a, b) => {
     if (
       a.primaryDistance === minPrimaryDistance &&
       b.primaryDistance === minPrimaryDistance
