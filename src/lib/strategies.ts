@@ -28,11 +28,16 @@ const getIsWithinXWalk = ({
   return false
 }
 
+type StrategyItem = {
+  element: Element
+  withinReach: boolean
+}
+
 type Strategy = (options: {
   event: KeyboardEvent
   focusableElements: Element[]
   activeElement: Element
-}) => { element: Element; withinReach: boolean }[]
+}) => StrategyItem[]
 
 export const getByXWalkEuclidean: Strategy = ({
   focusableElements,
@@ -66,7 +71,12 @@ export const getByGrid: Strategy = ({
   activeElement,
   event,
 }) => {
-  let items = focusableElements
+  let items: (StrategyItem & {
+    primaryDistance: number
+    secondaryDistance: number
+    anyOtherItemWithinReach?: boolean
+    isParentOfActiveElement?: boolean
+  })[] = focusableElements
     .map((element) => {
       const distances = getXyDistance({ activeElement, element })
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -104,36 +114,39 @@ export const getByGrid: Strategy = ({
       }
     })
     .map((item) => {
-      // If the parent is focusable then weird things can happen. It is possible to select the parent while going right.
       return {
         ...item,
-        containsActiveElement: item.element.contains(activeElement),
+        isParentOfActiveElement: item.element.contains(activeElement),
       }
     })
 
   items = items.map((item) => {
-    if (!item.containsActiveElement) {
+    // Filter out items that are the parent of the active element.
+    // If the parent is focusable then weird things can happen. It is possible to select the parent while going right.
+
+    if (!item.isParentOfActiveElement) {
       return item
     }
 
     const anyOtherItemWithinReach = items.some((other) => {
       if (other === item) return false
-      if (other.containsActiveElement) return false
+      if (other.isParentOfActiveElement) return false
       if (!other.withinReach) return false
       return true
     })
 
-    if (anyOtherItemWithinReach) {
-      // if there is another item within reach, then the parent is not focusable
+    if (!anyOtherItemWithinReach) {
       return {
         ...item,
-        withinReach: false,
+        anyOtherItemWithinReach,
       }
     }
 
+    // if there is another item within reach, then the parent is not focusable
     return {
       ...item,
-      withinReach: true,
+      withinReach: false,
+      anyOtherItemWithinReach,
     }
   })
 
