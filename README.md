@@ -8,6 +8,12 @@ Instead of hitting `Tab` a thousand times, you can simply use the arrow keys to 
 
 ArrowTabs defaults work pretty good but they are not always a plug and play solution. It helps if you build your app with ArrowTab in mind. For example: Aligning your focusables into a grid, thinking about the placement of your navigation, etc. The idea is that you integrate ArrowTab into your app from the beginning. Not to add it as an afterthought.
 
+## Input Behavior Changes
+
+ArrowTab slightly modifies the behavior of some input elements to enhance keyboard navigation. For example, number inputs will not change their value when using the up and down arrow keys; instead, the focus will move to the element above or below.
+
+To revert to the native behavior, press `Shift` + `Arrow Key`.
+
 
 ## Installation
 
