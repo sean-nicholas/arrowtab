@@ -1,12 +1,12 @@
 # ArrowTab
 
-**ArrowTab** allows you to navigate a webpage using the arrow keys, automatically selecting the nearest focusable element. This enables fast and efficient keyboard-only navigation across the page.
+**ArrowTab** allows you to **navigate** a webpage **using the arrow keys**, automatically selecting the nearest focusable element. This enables fast and efficient keyboard-only navigation across the page.
 
 ArrowTab is particularly **useful for business applications**, where power users need to prioritize **high productivity**.
 
 Instead of hitting `Tab` repeatedly, you can simply use the arrow keys to indicate the direction and jump to the next input, button, or link you want to select.
 
-ArrowTab's default settings work well, but they are not always a plug-and-play solution. It helps if you build your app with ArrowTab in mind. For example, aligning your focusable elements into a grid and considering the placement of your navigation. The idea is to integrate ArrowTab into your app from the beginning, not to add it as an afterthought.
+ArrowTab's default settings work well, but they are not always a plug-and-play solution. It helps if you **build your app with ArrowTab in mind**. For example, aligning your focusable elements into a grid and considering the placement of your navigation. The idea is to integrate ArrowTab into your app from the beginning, not to add it as an afterthought.
 
 ## Input Behavior Changes
 
