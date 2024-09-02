@@ -10,6 +10,7 @@
   ],
   "main": "dist/index.js",
   "scripts": {
+    "prepublishOnly": "npm run ci",
     "test": "vitest run",
     "dev": "concurrently \"tsc --watch\" \"http-server -o --cors\"",
     "build": "rm -rf dist && tsc",
@@ -17,13 +18,15 @@
     "ci": "pnpm run build && pnpm run check-format && pnpm run check-exports && pnpm run test",
     "format": "prettier --write .",
     "check-format": "prettier --check .",
-    "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm"
+    "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
+    "local-release": "changeset version && changeset publish"
   },
   "author": "Sean Nicholas",
   "license": "MIT",
   "type": "module",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.15.4",
+    "@changesets/cli": "^2.27.7",
     "concurrently": "^8.2.2",
     "http-server": "^14.1.1",
     "prettier": "^3.3.3",
