@@ -171,9 +171,55 @@
         <input type="text" class="border-2 border-gray-300 p-2" />
       </div>
     </div>
+
+    <div
+      id="keys"
+      class="fixed top-0 left-0 bottom-0 right-0 flex justify-end items-end p-8 pointer-events-none gap-4"
+    ></div>
+
     <script type="module">
       import { initArrowTab } from './dist/index.js'
       initArrowTab({ debug: true })
+    </script>
+
+    <script type="module">
+      const lastKeys = []
+      document.addEventListener('keydown', (e) => {
+        let arrow = ''
+        if (e.key === 'ArrowDown') {
+          arrow = '↓'
+        } else if (e.key === 'ArrowUp') {
+          arrow = '↑'
+        } else if (e.key === 'ArrowLeft') {
+          arrow = '←'
+        } else if (e.key === 'ArrowRight') {
+          arrow = '→'
+        }
+
+        if (!arrow) {
+          return
+        }
+
+        lastKeys.push(arrow)
+
+        if (lastKeys.length > 3) {
+          lastKeys.shift()
+        }
+
+        document.querySelector('#keys').innerHTML = lastKeys
+          .map(
+            (key, index) => `
+        <div
+          class="flex items-center justify-center w-12 h-12 bg-gray-200 border-2 border-gray-400 rounded-md shadow-md ${
+            index === lastKeys.length - 1 ? '' : 'opacity-50'
+          }"
+        >
+          <span class="text-lg font-semibold text-gray-800">${key}</span>
+        </div>
+      `,
+          )
+          .join('')
+      })
     </script>
   </body>
 </html>
