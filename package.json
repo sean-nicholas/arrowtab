@@ -20,7 +20,8 @@
     "format": "prettier --ignore-path ./node_modules/prettier-ignore/prettierignore --write .",
     "check-format": "prettier --ignore-path ./node_modules/prettier-ignore/prettierignore --check .",
     "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
-    "local-release": "changeset version && changeset publish"
+    "local-release": "changeset version && changeset publish",
+    "new-changeset": "changeset"
   },
   "author": "Sean Nicholas",
   "license": "MIT",
