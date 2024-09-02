@@ -71,6 +71,34 @@ const { cleanup } = initArrowTab()
 cleanup()
 ```
 
+## Options
+
+You can pass options to the `initArrowTab` function. For example:
+
+```ts
+initArrowTab({ debug: true })
+```
+
+### debug
+
+default: `false`
+
+If debug is set to `true`, ArrowTab will log debug information to the console. It also enables the visual debug mode. To activate the visual debug mode, press `Ctrl` + `Arrow Key`. So for example `Ctrl` + `Arrow Down` will highlight all the focusable elements.
+
+Here is an example:
+
+<div style="padding:10px; background:white; border-radius:4px; margin-bottom:1rem">
+  <img src="docs/images/visual-debug-mode.jpg" alt="Visual debug mode example">
+</div>
+
+Blue is the current element. Green are focusable elements that are within reach and red are those that are not within reach.
+
+The numbers are the order of the focusable elements. The numbers in parentheses are the order of the focusable elements that are within reach. Lower numbers are closer to the current element.
+
+If you click on a focusable element, debug information will be logged to the console.
+
+To deactivate the visual debug mode, press `Esc`.
+
 ## data-arrowtab
 
 You can control the behavior of ArrowTab by adding a `data-arrowtab` attribute to any element. Separate the keywords with a space. For example: `<div data-arrowtab="disable-left disable-right">`
