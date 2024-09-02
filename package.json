@@ -1,6 +1,6 @@
 {
   "name": "arrowtab",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Use arrow keys to \"tab\" between focusable elements",
   "keywords": [
     "arrowkeys",
