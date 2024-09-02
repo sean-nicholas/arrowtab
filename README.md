@@ -4,16 +4,15 @@
 
 ArrowTab is particularly **useful for business applications**, where power users need to prioritize **high productivity**.
 
-Instead of hitting `Tab` a thousand times, you can simply use the arrow keys to indicate the direction and jump to the next input, button, or link you want to select.
+Instead of hitting `Tab` repeatedly, you can simply use the arrow keys to indicate the direction and jump to the next input, button, or link you want to select.
 
-ArrowTabs defaults work pretty good but they are not always a plug and play solution. It helps if you build your app with ArrowTab in mind. For example: Aligning your focusables into a grid, thinking about the placement of your navigation, etc. The idea is that you integrate ArrowTab into your app from the beginning. Not to add it as an afterthought.
+ArrowTab's default settings work well, but they are not always a plug-and-play solution. It helps if you build your app with ArrowTab in mind. For example, aligning your focusable elements into a grid and considering the placement of your navigation. The idea is to integrate ArrowTab into your app from the beginning, not to add it as an afterthought.
 
 ## Input Behavior Changes
 
 ArrowTab slightly modifies the behavior of some input elements to enhance keyboard navigation. For example, number inputs will not change their value when using the up and down arrow keys; instead, the focus will move to the element above or below.
 
 To revert to the native behavior, press `Shift` + `Arrow Key`.
-
 
 ## Installation
 
@@ -64,7 +63,6 @@ export const ArrowTab = () => {
 
   return null
 }
-
 ```
 
 ### Cleanup
@@ -89,7 +87,7 @@ initArrowTab({ debug: true })
 
 default: `false`
 
-If debug is set to `true`, ArrowTab will log debug information to the console. It also enables the visual debug mode. To activate the visual debug mode, press `Ctrl` + `Arrow Key`. So for example `Ctrl` + `Arrow Down` will highlight all the focusable elements.
+If debug is set to `true`, ArrowTab will log debug information to the console. It also enables the visual debug mode. To activate the visual debug mode, press `Ctrl` + `Arrow Key`. For example, `Ctrl` + `Arrow Down` will highlight all the focusable elements.
 
 Here is an example:
 
@@ -97,9 +95,9 @@ Here is an example:
   <img src="docs/images/visual-debug-mode.jpg" alt="Visual debug mode example">
 </div>
 
-Blue is the current element. Green are focusable elements that are within reach and red are those that are not within reach.
+Blue indicates the current element. Green indicates focusable elements that are within reach, and red indicates those that are not within reach.
 
-The numbers are the order of the focusable elements. The numbers in parentheses are the order of the focusable elements that are within reach. Lower numbers are closer to the current element.
+The numbers represent the order of the focusable elements. The numbers in parentheses represent the order of the focusable elements that are within reach. Lower numbers are closer to the current element.
 
 If you click on a focusable element, debug information will be logged to the console.
 
@@ -117,14 +115,13 @@ Sometimes your components are listening to arrow keys themselves. In that case, 
 
 If you only want to disable a specific key, then use: `disable-left`, `disable-right`, `disable-up`, `disable-down`.
 
-
 ## Development
 
 ```sh
 pnpm dev
 ```
 
-A demo page will open in your browser / at `http://localhost:8080`.
+A demo page will open in your browser at `http://localhost:8080`.
 
 If you want to use the library in your app, you can use the following code:
 
