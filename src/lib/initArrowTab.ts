@@ -3,6 +3,7 @@ import {
   deactivateDebugMode,
   isInDebugMode,
 } from './debugMode.js'
+import { setHistoryCandidate, startAutoDetectHistory } from './focusHistory.js'
 import { getFocusable } from './getFocusable.js'
 import { hasDisabledKeys } from './hasDisabledKeys.js'
 import { hasTextSelection } from './hasTextSelection.js'
@@ -23,7 +24,10 @@ import { getByGrid } from './strategies.js'
 // TODO: select, details, summary, iframe
 // TODO: Investigate links that don't show focus outline sometimes
 
-export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
+export const initArrowTab = ({
+  debug = false,
+  autoDetectHistory = false,
+}: { debug?: boolean; autoDetectHistory?: boolean } = {}) => {
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isInDebugMode()) {
       deactivateDebugMode()
@@ -118,14 +122,20 @@ export const initArrowTab = ({ debug = false }: { debug?: boolean } = {}) => {
         console.log('focusing element', nearest)
       }
       nearest.element.focus()
+      setHistoryCandidate({ element: nearest.element })
     }
   }
 
   document.addEventListener('keydown', onKeyDown, { capture: true })
 
+  const { cleanup: cleanupAutoDetectHistory } = startAutoDetectHistory({
+    active: autoDetectHistory,
+  })
+
   return {
     cleanup: () => {
       document.removeEventListener('keydown', onKeyDown, { capture: true })
+      cleanupAutoDetectHistory()
     },
   }
 }
