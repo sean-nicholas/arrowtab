@@ -3,11 +3,7 @@ import {
   deactivateDebugMode,
   isInDebugMode,
 } from './debugMode.js'
-import {
-  focusPrevious,
-  pushIntoHistory,
-  setLastFocusedElement,
-} from './focusHistory.js'
+import { setHistoryCandidate, startAutoDetectHistory } from './focusHistory.js'
 import { getFocusable } from './getFocusable.js'
 import { hasDisabledKeys } from './hasDisabledKeys.js'
 import { hasTextSelection } from './hasTextSelection.js'
@@ -126,53 +122,20 @@ export const initArrowTab = ({
         console.log('focusing element', nearest)
       }
       nearest.element.focus()
-      setLastFocusedElement({ element: nearest.element })
+      setHistoryCandidate({ element: nearest.element })
     }
   }
 
   document.addEventListener('keydown', onKeyDown, { capture: true })
 
-  let dialogObserver: MutationObserver | null = null
-  if (autoDetectHistory) {
-    // TODO: Support multiple dialogs
-    let lastDialogElement: HTMLElement | null = null
-    dialogObserver = new MutationObserver((mutationList) => {
-      for (const mutation of mutationList) {
-        if (mutation.type === 'childList') {
-          for (const node of mutation.addedNodes) {
-            if (
-              node.nodeType === 1 &&
-              node instanceof HTMLElement &&
-              node.getAttribute('role') === 'dialog'
-            ) {
-              lastDialogElement = node
-              pushIntoHistory()
-            }
-          }
-
-          for (const node of mutation.removedNodes) {
-            if (
-              node === lastDialogElement ||
-              node.contains(lastDialogElement)
-            ) {
-              lastDialogElement = null
-              focusPrevious()
-              return
-            }
-          }
-        }
-      }
-    })
-    dialogObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    })
-  }
+  const { cleanup: cleanupAutoDetectHistory } = startAutoDetectHistory({
+    active: autoDetectHistory,
+  })
 
   return {
     cleanup: () => {
       document.removeEventListener('keydown', onKeyDown, { capture: true })
-      dialogObserver?.disconnect()
+      cleanupAutoDetectHistory()
     },
   }
 }
