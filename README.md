@@ -80,7 +80,10 @@ cleanup()
 You can pass options to the `initArrowTab` function. For example:
 
 ```ts
-initArrowTab({ debug: true })
+initArrowTab({ 
+  debug: true,
+  autoDetectHistory: true,
+})
 ```
 
 ### debug
@@ -102,6 +105,12 @@ The numbers represent the order of the focusable elements. The numbers in parent
 If you click on a focusable element, debug information will be logged to the console.
 
 To deactivate the visual debug mode, press `Esc`.
+
+### autoDetectHistory
+
+default: `false`
+
+If `true`, ArrowTab will automatically detect dialogs and refocuses the last focused element when the dialog closes.
 
 ## data-arrowtab
 
