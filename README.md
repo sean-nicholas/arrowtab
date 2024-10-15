@@ -80,7 +80,7 @@ cleanup()
 You can pass options to the `initArrowTab` function. For example:
 
 ```ts
-initArrowTab({ 
+initArrowTab({
   debug: true,
   autoDetectHistory: true,
 })
