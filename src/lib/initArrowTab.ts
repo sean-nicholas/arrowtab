@@ -1,141 +1,147 @@
+import { canMoveCaret } from './caret.js'
+import { changesValueOnArrowKeys } from './changesValueOnArrowKeys.js'
 import {
   activateDebugMode,
   deactivateDebugMode,
   isInDebugMode,
 } from './debugMode.js'
-import { setHistoryCandidate, startAutoDetectHistory } from './focusHistory.js'
-import { getFocusable } from './getFocusable.js'
+import { getDirection } from './directions.js'
+import { startAutoDetectHistory } from './focusHistory.js'
+import { startFocusTracker } from './focusTracker.js'
+import { getFocusable } from './focusable.js'
+import { getRect } from './geometry.js'
 import { hasDisabledKeys } from './hasDisabledKeys.js'
-import { hasTextSelection } from './hasTextSelection.js'
-import { preventNativeArrowKeyPresses } from './preventNativeArrowKeyPresses.js'
-import { getByGrid } from './strategies.js'
+import { rankCandidates } from './rankCandidates.js'
+import { getScope } from './scope.js'
+import { grid, spatial, type Strategy } from './strategies.js'
+import { isHandledByWidget } from './widgets.js'
 
-// TODO: Options
-// modifierKey: 'ctrlKey',
-// onlyWithModifierKey: false, // TODO: Better name
-// strategy: arrowTab.XWalkEuclidean,
-// selector: undefined,
-// elementFilter: () => boolean,
-// getElementPosition: (element) => { x: number, y: number },
-// eventTriggerName: 'keydown' | 'keyup',
-// earlyReturn: (event) => boolean, // TODO: Better name
+const strategies = { spatial, grid }
 
-// TODO: Check if tab focuses the same elements as arrowTab
-// TODO: select, details, summary, iframe
-// TODO: Investigate links that don't show focus outline sometimes
+export type ArrowTabOptions = {
+  debug?: boolean
+  autoDetectHistory?: boolean
+  strategy?: keyof typeof strategies | Strategy
+}
+
+const getActiveElement = () => {
+  const { activeElement } = document
+  return activeElement instanceof HTMLElement && activeElement !== document.body
+    ? activeElement
+    : null
+}
 
 export const initArrowTab = ({
   debug = false,
   autoDetectHistory = false,
-}: { debug?: boolean; autoDetectHistory?: boolean } = {}) => {
+  strategy = 'spatial',
+}: ArrowTabOptions = {}) => {
+  const log = (...args: unknown[]) => {
+    if (debug) console.log('[arrowtab]', ...args)
+  }
+  const rank = typeof strategy === 'function' ? strategy : strategies[strategy]
+  const focusTracker = startFocusTracker()
+
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isInDebugMode()) {
       deactivateDebugMode()
       return
     }
 
+    const direction = getDirection({ key: event.key })
+    if (!direction) return
+
+    if (isInDebugMode()) deactivateDebugMode()
+    const showDebugMode = debug && event.ctrlKey
+
+    // Shift falls back to the native behavior. Alt, Meta and Ctrl belong to the OS / browser (word jumps, history navigation, ...)
     if (
-      event.key !== 'ArrowLeft' &&
-      event.key !== 'ArrowRight' &&
-      event.key !== 'ArrowUp' &&
-      event.key !== 'ArrowDown'
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.shiftKey ||
+      event.altKey ||
+      event.metaKey ||
+      (event.ctrlKey && !showDebugMode)
     ) {
       return
     }
 
-    // TODO: Use modifierKey
-    if (event.shiftKey) {
-      return
-    }
+    const activeElement = getActiveElement()
 
-    const activeElement = document.activeElement
-
-    if (!activeElement) {
-      if (debug) {
-        console.log('no active element')
+    if (activeElement) {
+      if (hasDisabledKeys({ activeElement, direction })) {
+        log('arrow keys are disabled')
+        return
       }
-      return
-    }
-
-    if (hasDisabledKeys({ event, activeElement })) {
-      if (debug) {
-        console.log('arrow keys are disabled')
+      if (isHandledByWidget({ activeElement, direction })) {
+        log('arrow key is handled by a widget')
+        return
       }
-      return
-    }
-
-    preventNativeArrowKeyPresses({ event, activeElement })
-
-    const nothingHasFocus = activeElement === document.body
-    if (nothingHasFocus) {
-      if (debug) {
-        console.log('nothing has focus. using first focusable')
-      }
-      const firstFocusable = getFocusable()?.[0]
-      if (firstFocusable instanceof HTMLElement) {
-        firstFocusable.focus()
+      if (!showDebugMode && canMoveCaret({ activeElement, direction })) {
+        log('caret can still move')
         return
       }
     }
 
-    if (hasTextSelection({ activeElement, event })) {
-      if (debug) {
-        console.log('element has text selection')
-      }
-      return
-    }
-
-    const allFocusable = getFocusable()
-    const withoutActiveElement = allFocusable.filter(
-      (element) => element !== activeElement,
+    const scope = getScope({ activeElement })
+    const candidates = getFocusable({ root: scope }).filter(
+      ({ element }) => element !== activeElement,
     )
+    // Without focus, navigate from the last focused position, e.g. after the focused element was removed
+    const origin = activeElement
+      ? getRect({ element: activeElement })
+      : focusTracker.getLastRect()
+    const ranked = origin
+      ? rankCandidates({
+          origin,
+          candidates,
+          direction,
+          strategy: rank,
+          activeElement,
+        })
+      : []
 
-    const sorted = getByGrid({
-      focusableElements: withoutActiveElement,
-      activeElement,
-      event,
-    })
-
-    const withinReach = sorted.filter(({ withinReach }) => withinReach)
-
-    if (debug && event.ctrlKey) {
-      if (isInDebugMode()) {
-        deactivateDebugMode()
-      }
-
-      activateDebugMode({ focusableElements: sorted })
+    if (showDebugMode) {
+      event.preventDefault()
+      activateDebugMode({ origin, items: ranked })
       return
     }
 
-    let nearest = withinReach.at(0)
+    // Enter the scope if focus is outside of it: nothing is focused or focus is behind a modal
+    const isOutsideScope = !activeElement || !scope.contains(activeElement)
+    const target =
+      ranked.find(({ withinReach }) => withinReach) ??
+      (isOutsideScope ? candidates[0] : undefined)
 
-    if (debug) {
-      console.log('found nearest element to select', nearest)
-    }
-
-    if (!nearest) {
+    if (!target) {
+      log('nothing within reach')
+      if (
+        activeElement &&
+        changesValueOnArrowKeys({ element: activeElement })
+      ) {
+        event.preventDefault()
+      }
       return
     }
 
-    if (nearest.element instanceof HTMLElement) {
-      if (debug) {
-        console.log('focusing element', nearest)
-      }
-      nearest.element.focus()
-      setHistoryCandidate({ element: nearest.element })
-    }
+    log('focusing', target)
+    event.preventDefault()
+    target.element.focus()
   }
 
   document.addEventListener('keydown', onKeyDown, { capture: true })
 
   const { cleanup: cleanupAutoDetectHistory } = startAutoDetectHistory({
     active: autoDetectHistory,
+    focusTracker,
   })
 
   return {
     cleanup: () => {
       document.removeEventListener('keydown', onKeyDown, { capture: true })
       cleanupAutoDetectHistory()
+      focusTracker.cleanup()
+      if (isInDebugMode()) deactivateDebugMode()
     },
   }
 }

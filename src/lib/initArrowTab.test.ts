@@ -1,0 +1,387 @@
+// @vitest-environment happy-dom
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from 'vitest'
+import { initArrowTab, type ArrowTabOptions } from './initArrowTab.js'
+
+// happy-dom has no layout, so elements get their position from data-rect="left top width height"
+beforeAll(() => {
+  Element.prototype.getBoundingClientRect = function () {
+    const [left = 0, top = 0, width = 0, height = 0] = (
+      this.getAttribute('data-rect') ?? ''
+    )
+      .split(' ')
+      .map(Number)
+    return DOMRect.fromRect({ x: left, y: top, width, height })
+  }
+})
+
+let cleanup = () => {}
+
+const setup = ({
+  html,
+  options,
+}: {
+  html: string
+  options?: ArrowTabOptions
+}) => {
+  document.body.innerHTML = html
+  cleanup = initArrowTab(options).cleanup
+}
+
+const byId = (id: string) => document.getElementById(id) as HTMLElement
+
+const press = ({ key, init }: { key: string; init?: KeyboardEventInit }) => {
+  const event = new KeyboardEvent('keydown', {
+    key,
+    bubbles: true,
+    cancelable: true,
+    ...init,
+  })
+  ;(document.activeElement ?? document.body).dispatchEvent(event)
+  return event
+}
+
+const nextTick = () => new Promise((resolve) => setTimeout(resolve))
+
+beforeEach(() => {
+  document.body.innerHTML = ''
+})
+
+afterEach(() => {
+  cleanup()
+})
+
+describe('navigation', () => {
+  test('moves focus in the pressed direction', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <button id="b" data-rect="120 10 100 40">b</button>
+        <button id="c" data-rect="0 60 100 40">c</button>
+      `,
+    })
+    byId('a').focus()
+
+    expect(press({ key: 'ArrowRight' }).defaultPrevented).toBe(true)
+    expect(document.activeElement).toBe(byId('b'))
+
+    press({ key: 'ArrowLeft' })
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('c'))
+  })
+
+  test('keeps the native behavior if nothing is within reach', () => {
+    setup({ html: `<button id="a" data-rect="0 0 100 40">a</button>` })
+    byId('a').focus()
+
+    expect(press({ key: 'ArrowDown' }).defaultPrevented).toBe(false)
+  })
+
+  test('prevents value changes of fields even if nothing is within reach', () => {
+    setup({ html: `<input id="a" type="number" data-rect="0 0 100 40" />` })
+    byId('a').focus()
+
+    expect(press({ key: 'ArrowDown' }).defaultPrevented).toBe(true)
+  })
+
+  test('ignores modifier keys', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <button id="b" data-rect="120 0 100 40">b</button>
+      `,
+    })
+    byId('a').focus()
+
+    for (const modifier of ['shiftKey', 'altKey', 'metaKey', 'ctrlKey']) {
+      const event = press({ key: 'ArrowRight', init: { [modifier]: true } })
+      expect(event.defaultPrevented).toBe(false)
+      expect(document.activeElement).toBe(byId('a'))
+    }
+  })
+
+  test('skips elements that are not focusable via Tab', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <button disabled data-rect="120 0 100 40">disabled</button>
+        <button tabindex="-1" data-rect="240 0 100 40">tabindex</button>
+        <div inert><button data-rect="360 0 100 40">inert</button></div>
+        <div aria-hidden="true"><button data-rect="480 0 100 40">hidden</button></div>
+        <button data-rect="600 0 0 0">empty</button>
+        <button id="b" data-rect="720 0 100 40">b</button>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('b'))
+  })
+
+  test('uses the grid strategy if configured', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <button id="far" data-rect="400 60 100 40">far</button>
+        <button id="near" data-rect="150 60 100 40">near</button>
+      `,
+      options: { strategy: 'grid' },
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('near'))
+  })
+
+  test('cleanup removes the listener', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <button id="b" data-rect="120 0 100 40">b</button>
+      `,
+    })
+    cleanup()
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('a'))
+  })
+})
+
+describe('text fields', () => {
+  const html = `
+    <input id="input" value="hello" data-rect="0 0 100 40" />
+    <textarea id="textarea" data-rect="120 0 100 40">first\nsecond</textarea>
+    <button id="right" data-rect="240 0 100 40">right</button>
+    <button id="below" data-rect="120 60 100 40">below</button>
+  `
+
+  test('moves the caret until it reaches the edge', () => {
+    setup({ html })
+    const input = byId('input') as HTMLInputElement
+    input.focus()
+
+    input.setSelectionRange(2, 2)
+    expect(press({ key: 'ArrowRight' }).defaultPrevented).toBe(false)
+    expect(document.activeElement).toBe(input)
+
+    input.setSelectionRange(5, 5)
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('textarea'))
+  })
+
+  test('textareas only leave at the first / last line', () => {
+    setup({ html })
+    const textarea = byId('textarea') as HTMLTextAreaElement
+    textarea.focus()
+
+    textarea.setSelectionRange(2, 2)
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(textarea)
+
+    textarea.setSelectionRange(8, 8)
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('below'))
+  })
+})
+
+describe('opting out', () => {
+  test('data-arrowtab disables single directions', () => {
+    setup({
+      html: `
+        <div data-arrowtab="disable-right">
+          <button id="a" data-rect="0 0 100 40">a</button>
+        </div>
+        <button id="b" data-rect="120 0 100 40">b</button>
+        <button id="c" data-rect="0 60 100 40">c</button>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('a'))
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('c'))
+  })
+
+  test('ARIA widgets keep their own arrow keys', () => {
+    setup({
+      html: `
+        <div role="tablist">
+          <button id="tab" role="tab" data-rect="0 0 100 40">tab</button>
+          <button role="tab" tabindex="-1" data-rect="120 0 100 40">tab 2</button>
+        </div>
+        <button id="below" data-rect="0 60 100 40">below</button>
+      `,
+    })
+    byId('tab').focus()
+
+    expect(press({ key: 'ArrowRight' }).defaultPrevented).toBe(false)
+    expect(document.activeElement).toBe(byId('tab'))
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('below'))
+  })
+
+  test('open comboboxes keep up / down', () => {
+    setup({
+      html: `
+        <input id="combobox" role="combobox" aria-expanded="true" data-rect="0 0 100 40" />
+        <button data-rect="0 60 100 40">below</button>
+      `,
+    })
+    byId('combobox').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('combobox'))
+  })
+
+  test('data-arrowtab="enable" overrides widget detection', () => {
+    setup({
+      html: `
+        <div role="toolbar" data-arrowtab="enable">
+          <button id="a" data-rect="0 0 100 40">a</button>
+          <button id="b" data-rect="120 0 100 40">b</button>
+        </div>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('b'))
+  })
+})
+
+describe('scopes', () => {
+  test('navigation stays inside an open modal', () => {
+    setup({
+      html: `
+        <button id="behind" data-rect="0 100 100 40">behind</button>
+        <div role="dialog" aria-modal="true">
+          <button id="a" data-rect="0 0 100 40">a</button>
+        </div>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('a'))
+  })
+
+  test('navigation stays inside a non-modal dialog', () => {
+    setup({
+      html: `
+        <button id="behind" data-rect="0 100 100 40">behind</button>
+        <div role="dialog">
+          <button id="a" data-rect="0 0 100 40">a</button>
+        </div>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('a'))
+  })
+
+  test('focus behind a modal jumps into the modal', () => {
+    setup({
+      html: `
+        <button id="behind" data-rect="0 0 100 40">behind</button>
+        <div role="dialog" aria-modal="true">
+          <button id="a" data-rect="0 300 100 40">a</button>
+          <button id="b" data-rect="0 360 100 40">b</button>
+        </div>
+      `,
+    })
+    byId('behind').focus()
+
+    press({ key: 'ArrowUp' })
+    expect(document.activeElement).toBe(byId('a'))
+  })
+
+  test('data-arrowtab="scope" keeps focus inside', () => {
+    setup({
+      html: `
+        <div data-arrowtab="scope">
+          <button id="a" data-rect="0 0 100 40">a</button>
+        </div>
+        <button data-rect="0 60 100 40">outside</button>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('a'))
+  })
+})
+
+describe('focus recovery', () => {
+  test('navigates from the last position if the focused element was removed', () => {
+    setup({
+      html: `
+        <button id="top" data-rect="0 0 100 40">top</button>
+        <button id="removed" data-rect="0 100 100 40">removed</button>
+        <button id="bottom" data-rect="0 200 100 40">bottom</button>
+      `,
+    })
+    byId('removed').focus()
+    byId('removed').remove()
+    ;(document.activeElement as HTMLElement | null)?.blur()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('bottom'))
+  })
+
+  test('autoDetectHistory refocuses the opener when a dialog closes', async () => {
+    setup({
+      html: `<button id="opener" data-rect="0 0 100 40">open</button>`,
+      options: { autoDetectHistory: true },
+    })
+    byId('opener').focus()
+
+    const portal = document.createElement('div')
+    portal.innerHTML = `
+      <div role="dialog">
+        <button id="inside" data-rect="0 100 100 40">inside</button>
+      </div>
+    `
+    document.body.append(portal)
+    byId('inside').focus()
+    await nextTick()
+
+    portal.remove()
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    await nextTick()
+
+    expect(document.activeElement).toBe(byId('opener'))
+  })
+
+  test('autoDetectHistory leaves focus alone if the dialog restored it', async () => {
+    setup({
+      html: `
+        <button id="opener" data-rect="0 0 100 40">open</button>
+        <button id="other" data-rect="0 60 100 40">other</button>
+      `,
+      options: { autoDetectHistory: true },
+    })
+    byId('opener').focus()
+
+    const dialog = document.createElement('div')
+    dialog.setAttribute('role', 'dialog')
+    dialog.innerHTML = `<button id="inside" data-rect="0 100 100 40">inside</button>`
+    document.body.append(dialog)
+    byId('inside').focus()
+    await nextTick()
+
+    dialog.remove()
+    byId('other').focus()
+    await nextTick()
+
+    expect(document.activeElement).toBe(byId('other'))
+  })
+})
