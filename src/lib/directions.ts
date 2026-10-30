@@ -14,3 +14,13 @@ export const isVertical = ({ direction }: { direction: Direction }) =>
 
 export const isForward = ({ direction }: { direction: Direction }) =>
   direction === 'down' || direction === 'right'
+
+const opposites: Record<Direction, Direction> = {
+  up: 'down',
+  down: 'up',
+  left: 'right',
+  right: 'left',
+}
+
+export const getOpposite = ({ direction }: { direction: Direction }) =>
+  opposites[direction]

@@ -1,5 +1,86 @@
 import { isVertical, type Direction } from './directions.js'
 
+const mirroredStyles = [
+  'boxSizing',
+  'fontFamily',
+  'fontSize',
+  'fontStyle',
+  'fontVariant',
+  'fontWeight',
+  'fontStretch',
+  'letterSpacing',
+  'wordSpacing',
+  'lineHeight',
+  'textTransform',
+  'textIndent',
+  'tabSize',
+  'wordBreak',
+  'overflowWrap',
+  'direction',
+  'paddingTop',
+  'paddingRight',
+  'paddingBottom',
+  'paddingLeft',
+] as const
+
+/**
+ * Whether the caret is in the first / last visual line of a textarea, including soft wrapped lines.
+ * Renders the text into a hidden copy of the textarea and compares the line positions of markers.
+ */
+const getCaretLine = ({
+  textarea,
+  start,
+  end,
+}: {
+  textarea: HTMLTextAreaElement
+  start: number
+  end: number
+}) => {
+  const style = window.getComputedStyle(textarea)
+  const mirror = document.createElement('div')
+  for (const property of mirroredStyles) {
+    mirror.style[property] = style[property]
+  }
+  Object.assign(mirror.style, {
+    position: 'absolute',
+    top: '0',
+    left: '-9999px',
+    visibility: 'hidden',
+    whiteSpace: 'pre-wrap',
+    border: '0',
+    overflow: 'hidden',
+    boxSizing: 'content-box',
+    width: `${textarea.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)}px`,
+  })
+
+  const { value } = textarea
+  const markers = [0, start, end, value.length].map(() =>
+    document.createElement('span'),
+  )
+  const [first, caretStart, caretEnd, last] = markers as [
+    HTMLSpanElement,
+    HTMLSpanElement,
+    HTMLSpanElement,
+    HTMLSpanElement,
+  ]
+  mirror.append(
+    first,
+    value.slice(0, start),
+    caretStart,
+    value.slice(start, end),
+    caretEnd,
+    value.slice(end),
+    last,
+  )
+  document.body.append(mirror)
+  const line = {
+    isFirst: caretStart.offsetTop <= first.offsetTop,
+    isLast: caretEnd.offsetTop >= last.offsetTop,
+  }
+  mirror.remove()
+  return line
+}
+
 const canMoveCaretInField = ({
   field,
   direction,
@@ -18,13 +99,14 @@ const canMoveCaretInField = ({
       return hasSelection || start > 0
     case 'right':
       return hasSelection || end < value.length
-    // Only checks line breaks, soft wrapped lines are not detected
     case 'up':
-      return (
-        isTextarea && start > 0 && value.lastIndexOf('\n', start - 1) !== -1
-      )
+      if (!isTextarea) return false
+      if (start > 0 && value.lastIndexOf('\n', start - 1) !== -1) return true
+      return !getCaretLine({ textarea: field, start, end }).isFirst
     case 'down':
-      return isTextarea && value.indexOf('\n', end) !== -1
+      if (!isTextarea) return false
+      if (value.indexOf('\n', end) !== -1) return true
+      return !getCaretLine({ textarea: field, start, end }).isLast
   }
 }
 

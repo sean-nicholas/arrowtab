@@ -18,7 +18,7 @@ Arrow keys combined with `Alt`, `Ctrl` or `Meta` / `Cmd` are left to the browser
 
 If there is nothing to navigate to, the arrow key keeps its native behavior, so the page can still scroll. Only fields that would change their value (e.g. number inputs, selects, radio buttons) never react to arrow keys.
 
-Text fields keep the arrow keys as long as the caret can move: left / right leave an input once the caret is at the start / end, up / down leave a textarea or `contenteditable` once the caret is in the first / last line.
+Text fields keep the arrow keys as long as the caret can move: left / right leave an input once the caret is at the start / end, up / down leave a textarea or `contenteditable` once the caret is in the first / last line (soft wrapped lines included).
 
 ## Installation
 
@@ -145,7 +145,46 @@ const strategy: Strategy = ({ origin, candidates, direction }) =>
 initArrowTab({ strategy })
 ```
 
+### root
+
+default: the whole document
+
+Only navigate inside this element. Arrow keys outside of it are ignored.
+
+```ts
+initArrowTab({ root: document.querySelector('#app') })
+```
+
+Calling `initArrowTab` twice for the same root logs a warning. Call `cleanup()` of the first instance before initializing it again.
+
+## Events
+
+Before focus moves, ArrowTab dispatches a cancelable `arrowtab:navigate` event on the focused element (or the document if nothing is focused). It bubbles and crosses shadow roots. Call `preventDefault()` to stop the navigation:
+
+```ts
+import { navigateEventName } from 'arrowtab'
+
+document.addEventListener(navigateEventName, (event) => {
+  const { from, to, direction } = event.detail
+  if (to.matches('.locked')) event.preventDefault()
+})
+```
+
 ## Special Cases
+
+### Going back
+
+Pressing the opposite arrow key returns to the element focus came from, e.g. down from a narrow button to a wide one and up again lands on the same narrow button.
+
+### Hidden elements and scrolling
+
+Elements that are completely hidden by an ancestor with `overflow: hidden` or `overflow: clip` (e.g. inactive carousel slides) are skipped. Elements in scroll containers stay reachable.
+
+Focusing an element scrolls as little as possible. If you have a sticky header, set [`scroll-padding-top`](https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-padding-top) on the scroll container so focused elements don't end up behind it.
+
+### Shadow DOM
+
+Focusable elements inside open shadow roots are found, so ArrowTab works with web components. `data-arrowtab` attributes on the host apply to its shadow content. `autoDetectHistory` doesn't detect dialogs inside shadow roots.
 
 ### Modals and scopes
 
@@ -153,7 +192,7 @@ If focus is inside a dialog (`<dialog>`, `role="dialog"`, `role="alertdialog"` o
 
 If focus is behind an open modal (`aria-modal="true"` or a `<dialog>` opened with `showModal()`), the next arrow key moves it into the modal.
 
-Use `data-arrowtab="scope"` to keep navigation inside any other container.
+Use `data-arrowtab="scope"` to keep navigation inside any other container, or `data-arrowtab="wrap"` to also jump to the opposite edge at the end.
 
 ### ARIA widgets
 
@@ -191,6 +230,14 @@ If you only want to disable a specific key, then use: `disable-left`, `disable-r
 ### scope
 
 Keeps navigation inside this element while focus is inside it. See [Modals and scopes](#modals-and-scopes).
+
+### wrap
+
+Like `scope`, but at the edge focus jumps to the opposite side, preferably in the same row / column. Add it to `<body>` to wrap around the whole page.
+
+### skip
+
+The element (and its children) is skipped by the arrow keys but stays reachable with `Tab`. Useful for e.g. help links next to every field.
 
 ### enable
 

@@ -6,5 +6,9 @@ export {
   type RankedCandidate,
   type Strategy,
 } from './lib/strategies.js'
+export {
+  navigateEventName,
+  type ArrowTabNavigateEvent,
+} from './lib/navigateEvent.js'
 export type { Direction } from './lib/directions.js'
 export type { Rect } from './lib/geometry.js'

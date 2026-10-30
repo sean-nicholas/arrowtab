@@ -1,4 +1,5 @@
 import { isVertical, type Direction } from './directions.js'
+import { closestComposed } from './dom.js'
 
 const horizontal: Direction[] = ['left', 'right']
 const vertical: Direction[] = ['up', 'down']
@@ -46,12 +47,22 @@ export const isHandledByWidget = ({
   activeElement: Element
   direction: Direction
 }) => {
-  if (activeElement.closest('[data-arrowtab~="enable"]')) return false
+  if (
+    closestComposed({
+      element: activeElement,
+      selector: '[data-arrowtab~="enable"]',
+    })
+  ) {
+    return false
+  }
 
   if (activeElement.matches(popupTriggerSelector)) {
     return isVertical({ direction })
   }
 
-  const widget = activeElement.closest(widgetSelector)
+  const widget = closestComposed({
+    element: activeElement,
+    selector: widgetSelector,
+  })
   return widget ? getWidgetDirections({ widget }).includes(direction) : false
 }

@@ -1,3 +1,4 @@
+import { containsComposed } from './dom.js'
 import { getRect, isEmptyRect, type Rect } from './geometry.js'
 
 const maxEntries = 20
@@ -9,7 +10,8 @@ export const startFocusTracker = () => {
   let recent: { element: HTMLElement; rect: Rect }[] = []
 
   const onFocusIn = (event: FocusEvent) => {
-    const element = event.target
+    // The target is retargeted to the shadow host, the composed path starts at the focused element
+    const element = event.composedPath()[0]
     if (!(element instanceof HTMLElement)) return
     recent = recent.filter((entry) => entry.element !== element)
     recent.push({ element, rect: getRect({ element }) })
@@ -27,11 +29,14 @@ export const startFocusTracker = () => {
       const rect = getRect({ element: last.element })
       return isEmptyRect({ rect }) ? last.rect : rect
     },
+    getLastElement: () => recent.at(-1)?.element,
     getRecentlyFocused: ({ outside }: { outside: Element }) =>
       [...recent]
         .reverse()
         .find(
-          ({ element }) => element.isConnected && !outside.contains(element),
+          ({ element }) =>
+            element.isConnected &&
+            !containsComposed({ container: outside, element }),
         )?.element,
     cleanup: () => {
       document.removeEventListener('focusin', onFocusIn, { capture: true })

@@ -5,16 +5,24 @@ import {
   deactivateDebugMode,
   isInDebugMode,
 } from './debugMode.js'
-import { getDirection } from './directions.js'
+import { getDirection, getOpposite, type Direction } from './directions.js'
+import { containsComposed, getDeepActiveElement } from './dom.js'
 import { startAutoDetectHistory } from './focusHistory.js'
 import { startFocusTracker } from './focusTracker.js'
-import { getFocusable } from './focusable.js'
+import { createClipCheck, getFocusable } from './focusable.js'
 import { getRect } from './geometry.js'
 import { hasDisabledKeys } from './hasDisabledKeys.js'
+import { dispatchNavigate } from './navigateEvent.js'
 import { rankCandidates } from './rankCandidates.js'
-import { getScope } from './scope.js'
-import { grid, spatial, type Strategy } from './strategies.js'
+import { getScope, wrapSelector } from './scope.js'
+import {
+  grid,
+  spatial,
+  type RankedCandidate,
+  type Strategy,
+} from './strategies.js'
 import { isHandledByWidget } from './widgets.js'
+import { getWrapOrigin } from './wrap.js'
 
 const strategies = { spatial, grid }
 
@@ -22,25 +30,41 @@ export type ArrowTabOptions = {
   debug?: boolean
   autoDetectHistory?: boolean
   strategy?: keyof typeof strategies | Strategy
+  // Only navigate inside this element. Defaults to the whole document.
+  root?: Element
 }
 
 const getActiveElement = () => {
-  const { activeElement } = document
+  const activeElement = getDeepActiveElement()
   return activeElement instanceof HTMLElement && activeElement !== document.body
     ? activeElement
     : null
 }
 
+const initializedRoots = new Set<Element | undefined>()
+
 export const initArrowTab = ({
   debug = false,
   autoDetectHistory = false,
   strategy = 'spatial',
+  root,
 }: ArrowTabOptions = {}) => {
   const log = (...args: unknown[]) => {
     if (debug) console.log('[arrowtab]', ...args)
   }
+  if (initializedRoots.has(root)) {
+    console.warn(
+      '[arrowtab] initArrowTab was called twice for the same root. Call cleanup() of the first instance before initializing it again.',
+    )
+  }
+  initializedRoots.add(root)
+
   const rank = typeof strategy === 'function' ? strategy : strategies[strategy]
   const focusTracker = startFocusTracker()
+  // The last move, so the opposite direction can return to where focus came from
+  let lastMove:
+    | { from: HTMLElement; to: HTMLElement; direction: Direction }
+    | undefined
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isInDebugMode()) {
@@ -67,6 +91,11 @@ export const initArrowTab = ({
     }
 
     const activeElement = getActiveElement()
+    const rootElement = root ?? document.body
+    if (root) {
+      const element = activeElement ?? focusTracker.getLastElement()
+      if (!element || !containsComposed({ container: root, element })) return
+    }
 
     if (activeElement) {
       if (hasDisabledKeys({ activeElement, direction })) {
@@ -83,7 +112,7 @@ export const initArrowTab = ({
       }
     }
 
-    const scope = getScope({ activeElement })
+    const scope = getScope({ activeElement, root: rootElement })
     const candidates = getFocusable({ root: scope }).filter(
       ({ element }) => element !== activeElement,
     )
@@ -91,6 +120,10 @@ export const initArrowTab = ({
     const origin = activeElement
       ? getRect({ element: activeElement })
       : focusTracker.getLastRect()
+    const isClipped = createClipCheck()
+    const isTarget = (item: RankedCandidate) =>
+      item.withinReach && !isClipped(item)
+
     const ranked = origin
       ? rankCandidates({
           origin,
@@ -98,23 +131,45 @@ export const initArrowTab = ({
           direction,
           strategy: rank,
           activeElement,
+          preferred:
+            lastMove?.to === activeElement &&
+            direction === getOpposite({ direction: lastMove.direction })
+              ? lastMove.from
+              : undefined,
         })
       : []
 
     if (showDebugMode) {
       event.preventDefault()
-      activateDebugMode({ origin, items: ranked })
+      activateDebugMode({
+        origin,
+        items: ranked.map((item) => ({ ...item, withinReach: isTarget(item) })),
+      })
       return
     }
 
     // Enter the scope if focus is outside of it: nothing is focused or focus is behind a modal
-    const isOutsideScope = !activeElement || !scope.contains(activeElement)
+    const isOutsideScope =
+      !activeElement ||
+      !containsComposed({ container: scope, element: activeElement })
     const target =
-      ranked.find(({ withinReach }) => withinReach) ??
-      (isOutsideScope ? candidates[0] : undefined)
+      ranked.find(isTarget) ??
+      (isOutsideScope
+        ? candidates.find((item) => !isClipped(item))
+        : undefined) ??
+      (origin && scope.matches(wrapSelector) && candidates.length > 0
+        ? rank({
+            origin: getWrapOrigin({ origin, candidates, direction }),
+            candidates,
+            direction,
+          }).find(isTarget)
+        : undefined)
 
-    if (!target) {
-      log('nothing within reach')
+    if (
+      !target ||
+      !dispatchNavigate({ from: activeElement, to: target.element, direction })
+    ) {
+      log(target ? 'navigation was canceled' : 'nothing within reach')
       if (
         activeElement &&
         changesValueOnArrowKeys({ element: activeElement })
@@ -126,7 +181,12 @@ export const initArrowTab = ({
 
     log('focusing', target)
     event.preventDefault()
-    target.element.focus()
+    // Scroll as little as possible. Sticky headers are respected via scroll-padding.
+    target.element.focus({ preventScroll: true })
+    target.element.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    if (activeElement) {
+      lastMove = { from: activeElement, to: target.element, direction }
+    }
   }
 
   document.addEventListener('keydown', onKeyDown, { capture: true })
@@ -141,6 +201,7 @@ export const initArrowTab = ({
       document.removeEventListener('keydown', onKeyDown, { capture: true })
       cleanupAutoDetectHistory()
       focusTracker.cleanup()
+      initializedRoots.delete(root)
       if (isInDebugMode()) deactivateDebugMode()
     },
   }

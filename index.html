@@ -205,6 +205,33 @@
         <button id="remove-me" class="border-2 p-2">
           Remove me (lost focus)
         </button>
+
+        <div class="overflow-hidden border-2 col-span-2 flex gap-2 p-2">
+          <button class="border-2 p-2 shrink-0 w-full">
+            Carousel slide 1 (slide 2 is clipped)
+          </button>
+          <button class="border-2 p-2 shrink-0 w-full">
+            ❌ Carousel slide 2
+          </button>
+        </div>
+        <textarea class="border-2 border-gray-300 p-2" rows="3">
+A long soft wrapped line in a textarea. Up / down only leave the field in the first / last visual line.</textarea
+        >
+
+        <div
+          data-arrowtab="wrap"
+          class="grid grid-cols-2 gap-2 border-2 border-dashed p-2"
+        >
+          <button class="border-2 p-2">wrap 1</button>
+          <button class="border-2 p-2">wrap 2</button>
+          <button class="border-2 p-2">wrap 3</button>
+          <button class="border-2 p-2">wrap 4</button>
+        </div>
+        <div class="flex gap-2 items-center">
+          <input type="text" class="border-2 border-gray-300 p-2" />
+          <a href="#" data-arrowtab="skip" class="underline">help (skip)</a>
+        </div>
+        <shadow-field></shadow-field>
       </div>
     </div>
 
@@ -234,6 +261,19 @@
         portal.querySelector('input').focus()
       }
 
+      customElements.define(
+        'shadow-field',
+        class extends HTMLElement {
+          constructor() {
+            super()
+            this.attachShadow({ mode: 'open' }).innerHTML = `
+              <input placeholder="✅ shadow DOM" style="border: 2px solid #d1d5db; padding: 0.5rem" />
+              <button style="border: 2px solid; padding: 0.5rem">shadow button</button>
+            `
+          }
+        },
+      )
+
       document.querySelector('#remove-me').onclick = (event) =>
         event.currentTarget.remove()
 
@@ -257,6 +297,9 @@
     <script type="module">
       import { initArrowTab } from './dist/index.js'
       initArrowTab({ debug: true, autoDetectHistory: true })
+      document.addEventListener('arrowtab:navigate', (event) =>
+        console.log('[demo] arrowtab:navigate', event.detail),
+      )
     </script>
 
     <script type="module">

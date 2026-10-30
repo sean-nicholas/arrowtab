@@ -10,15 +10,32 @@ import {
 import { initArrowTab, type ArrowTabOptions } from './initArrowTab.js'
 
 // happy-dom has no layout, so elements get their position from data-rect="left top width height"
+const getDataRect = ({ element }: { element: Element }) => {
+  const [left = 0, top = 0, width = 0, height = 0] = (
+    element.getAttribute('data-rect') ?? ''
+  )
+    .split(' ')
+    .map(Number)
+  return { left, top, width, height }
+}
+
 beforeAll(() => {
   Element.prototype.getBoundingClientRect = function () {
-    const [left = 0, top = 0, width = 0, height = 0] = (
-      this.getAttribute('data-rect') ?? ''
-    )
-      .split(' ')
-      .map(Number)
+    const { left, top, width, height } = getDataRect({ element: this })
     return DOMRect.fromRect({ x: left, y: top, width, height })
   }
+  Object.defineProperties(HTMLElement.prototype, {
+    clientWidth: {
+      get() {
+        return getDataRect({ element: this }).width
+      },
+    },
+    clientHeight: {
+      get() {
+        return getDataRect({ element: this }).height
+      },
+    },
+  })
 })
 
 let cleanup = () => {}
@@ -137,6 +154,136 @@ describe('navigation', () => {
 
     press({ key: 'ArrowDown' })
     expect(document.activeElement).toBe(byId('near'))
+  })
+
+  test('going back returns to the element focus came from', () => {
+    setup({
+      html: `
+        <button id="wide" data-rect="0 0 300 40">wide</button>
+        <button id="left" data-rect="0 60 100 40">left</button>
+        <button id="right" data-rect="200 60 100 40">right</button>
+        <button id="top-right" data-rect="200 -60 100 40">top right</button>
+      `,
+    })
+    byId('top-right').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('wide'))
+    press({ key: 'ArrowUp' })
+    expect(document.activeElement).toBe(byId('top-right'))
+
+    byId('right').focus()
+    press({ key: 'ArrowUp' })
+    expect(document.activeElement).toBe(byId('wide'))
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('right'))
+  })
+
+  test('skips elements clipped by overflow: hidden', () => {
+    // happy-dom doesn't expand the overflow shorthand
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <div style="overflow-x: hidden; overflow-y: hidden" data-rect="120 0 100 40">
+          <button id="visible" data-rect="120 0 100 40">visible</button>
+          <button id="clipped" data-rect="220 0 100 40">clipped</button>
+        </div>
+        <div style="overflow-x: auto; overflow-y: auto" data-rect="0 60 100 40">
+          <button data-rect="0 60 100 40">scrollable</button>
+          <button id="scrolled" data-rect="120 60 100 40">scrolled out</button>
+        </div>
+      `,
+    })
+    byId('visible').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('visible'))
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('scrolled'))
+  })
+
+  test('data-arrowtab="skip" excludes elements', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <a href="#" data-arrowtab="skip" data-rect="120 0 100 40">help</a>
+        <button id="b" data-rect="240 0 100 40">b</button>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('b'))
+  })
+
+  test('the navigate event can cancel navigation', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <button id="b" data-rect="120 0 100 40">b</button>
+      `,
+    })
+    byId('a').focus()
+    const details: unknown[] = []
+    const onNavigate = (event: CustomEvent) => {
+      details.push(event.detail)
+      event.preventDefault()
+    }
+    document.addEventListener('arrowtab:navigate', onNavigate)
+
+    expect(press({ key: 'ArrowRight' }).defaultPrevented).toBe(false)
+    document.removeEventListener('arrowtab:navigate', onNavigate)
+
+    expect(document.activeElement).toBe(byId('a'))
+    expect(details).toEqual([
+      { from: byId('a'), to: byId('b'), direction: 'right' },
+    ])
+  })
+
+  test('the root option limits navigation', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <button id="a" data-rect="0 0 100 40">a</button>
+      </div>
+      <button id="outside" data-rect="120 0 100 40">outside</button>
+      <button id="below" data-rect="120 60 100 40">below</button>
+    `
+    cleanup = initArrowTab({ root: byId('root') }).cleanup
+
+    byId('a').focus()
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('a'))
+
+    byId('outside').focus()
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('outside'))
+  })
+
+  test('navigates into and out of shadow roots', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <div id="host"></div>
+        <button id="b" data-rect="240 0 100 40">b</button>
+      `,
+    })
+    const shadow = byId('host').attachShadow({ mode: 'open' })
+    shadow.innerHTML = `<input id="inner" data-rect="120 0 100 40" />`
+    const inner = shadow.getElementById('inner') as HTMLInputElement
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(shadow.activeElement).toBe(inner)
+
+    inner.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowRight',
+        bubbles: true,
+        composed: true,
+        cancelable: true,
+      }),
+    )
+    expect(document.activeElement).toBe(byId('b'))
   })
 
   test('cleanup removes the listener', () => {
@@ -301,6 +448,26 @@ describe('scopes', () => {
     byId('behind').focus()
 
     press({ key: 'ArrowUp' })
+    expect(document.activeElement).toBe(byId('a'))
+  })
+
+  test('data-arrowtab="wrap" jumps to the opposite edge', () => {
+    setup({
+      html: `
+        <div data-arrowtab="wrap">
+          <button id="a" data-rect="0 0 100 40">a</button>
+          <button id="b" data-rect="120 0 100 40">b</button>
+          <button id="c" data-rect="0 60 100 40">c</button>
+          <button id="d" data-rect="120 60 100 40">d</button>
+        </div>
+        <button data-rect="0 120 100 40">outside</button>
+      `,
+    })
+    byId('d').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('b'))
+    press({ key: 'ArrowRight' })
     expect(document.activeElement).toBe(byId('a'))
   })
 
