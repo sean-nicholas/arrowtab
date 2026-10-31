@@ -2,13 +2,13 @@ import type { Direction } from './directions.js'
 import { closestComposed } from './dom.js'
 
 export const hasDisabledKeys = ({
-  activeElement,
+  element,
   direction,
 }: {
-  activeElement: Element
+  element: Element
   direction: Direction
 }) =>
   closestComposed({
-    element: activeElement,
+    element,
     selector: `[data-arrowtab~="disable"], [data-arrowtab~="disable-${direction}"]`,
   }) !== null

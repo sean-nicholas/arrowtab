@@ -98,11 +98,13 @@ export const initArrowTab = ({
       : focusTracker.isLastInRoot() || !root
     if (!isInRoot) return
 
+    // Without focus, page level opt-outs (e.g. on <body>) still apply
+    if (hasDisabledKeys({ element: activeElement ?? rootElement, direction })) {
+      log('arrow keys are disabled')
+      return
+    }
+
     if (activeElement) {
-      if (hasDisabledKeys({ activeElement, direction })) {
-        log('arrow keys are disabled')
-        return
-      }
       if (isHandledByWidget({ activeElement, direction })) {
         log('arrow key is handled by a widget')
         return

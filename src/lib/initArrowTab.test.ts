@@ -123,6 +123,22 @@ describe('navigation', () => {
     }
   })
 
+  test('reaches non-editable controls inside a contenteditable', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <div contenteditable="true" data-rect="0 60 300 40">
+          <a href="#" data-rect="0 60 100 40">part of the text</a>
+          <button id="action" contenteditable="false" data-rect="200 60 100 40">action</button>
+        </div>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('action'))
+  })
+
   test('skips elements that are not focusable via Tab', () => {
     setup({
       html: `
@@ -371,6 +387,19 @@ describe('opting out', () => {
     expect(document.activeElement).toBe(byId('a'))
     press({ key: 'ArrowDown' })
     expect(document.activeElement).toBe(byId('c'))
+  })
+
+  test('data-arrowtab on the body applies without focus', () => {
+    setup({
+      html: `<button id="a" data-rect="0 0 100 40">a</button>`,
+    })
+    document.body.setAttribute('data-arrowtab', 'disable-down')
+
+    const event = press({ key: 'ArrowDown' })
+    document.body.removeAttribute('data-arrowtab')
+
+    expect(event.defaultPrevented).toBe(false)
+    expect(document.activeElement).not.toBe(byId('a'))
   })
 
   test('ARIA widgets keep their own arrow keys', () => {
