@@ -148,12 +148,14 @@ const canMoveCaretInContentEditable = ({
     rest.setStart(range.endContainer, range.endOffset)
   }
   const hasText = getRenderedText({ element, text: rest.toString() }).length > 0
-  if (!vertical) return hasText
+  if (!vertical && hasText) return true
 
-  // Up / down leave once the rest of the content is on the caret's line
+  // Whether the rest of the content has lines besides the caret's line, e.g. empty paragraphs without text.
+  // Up / down leave once it hasn't, left / right also need it for content without text.
   const caret = range.cloneRange()
   caret.collapse(isBackward)
   const caretRect = caret.getBoundingClientRect()
+  // Without layout information only text counts
   if (caretRect.height === 0) return hasText
   const caretCenter = caretRect.top + caretRect.height / 2
   return Array.from(rest.getClientRects()).some(
