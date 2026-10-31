@@ -218,6 +218,24 @@ describe('navigation', () => {
     expect(document.activeElement).toBe(byId('scrolled'))
   })
 
+  test('elements in a scroll container inside overflow: hidden stay reachable', () => {
+    setup({
+      html: `
+        <div style="overflow-x: hidden; overflow-y: hidden" data-rect="0 0 220 40">
+          <div style="overflow-x: auto; overflow-y: auto" data-rect="0 0 220 40">
+            <button id="a" data-rect="0 0 100 40">a</button>
+            <button id="b" data-rect="120 0 100 40">b</button>
+            <button id="c" data-rect="240 0 100 40">scrolled out</button>
+          </div>
+        </div>
+      `,
+    })
+    byId('b').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('c'))
+  })
+
   test('data-arrowtab="skip" excludes elements', () => {
     setup({
       html: `
@@ -315,6 +333,26 @@ describe('navigation', () => {
         cancelable: true,
       }),
     )
+    expect(document.activeElement).toBe(byId('b'))
+  })
+
+  test('navigates between elements slotted into a shadow modal', () => {
+    setup({
+      html: `
+        <button data-rect="0 300 100 40">behind</button>
+        <div id="host">
+          <button id="a" data-rect="0 0 100 40">a</button>
+          <button id="b" data-rect="0 60 100 40">b</button>
+        </div>
+      `,
+    })
+    byId('host').attachShadow({ mode: 'open' }).innerHTML = `
+      <div role="dialog" aria-modal="true"><slot></slot></div>
+    `
+    byId('a').focus()
+
+    // happy-dom lacks assignedSlot, staying inside the modal is checked in the browser
+    press({ key: 'ArrowDown' })
     expect(document.activeElement).toBe(byId('b'))
   })
 

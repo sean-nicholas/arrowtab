@@ -56,6 +56,7 @@ const isFocusable = ({ element }: { element: Element }) => {
 }
 
 const clippingOverflows = ['hidden', 'clip']
+const scrollingOverflows = ['auto', 'scroll']
 
 type ClipCache = Map<Element, { style: CSSStyleDeclaration; box?: Rect }>
 
@@ -103,7 +104,7 @@ const createsContainingBlock = ({ style }: { style: CSSStyleDeclaration }) =>
 
 /**
  * Whether the element is completely hidden by an ancestor with `overflow: hidden / clip`, e.g. an inactive carousel slide.
- * Scroll containers don't count, their content can be scrolled into view.
+ * Scroll containers don't clip, their content can be scrolled into view anywhere inside of them.
  */
 const isClipped = ({
   element,
@@ -116,6 +117,8 @@ const isClipped = ({
 }) => {
   let position = getCached({ element, cache }).style.position
   let current = getComposedParent({ element })
+  // Where the element can be once inner scroll containers are scrolled
+  let reachable = rect
 
   while (
     current &&
@@ -130,13 +133,27 @@ const isClipped = ({
     if (position !== 'absolute' || createsContainingBlock({ style })) {
       const clipsX = clippingOverflows.includes(style.overflowX)
       const clipsY = clippingOverflows.includes(style.overflowY)
-      if (clipsX || clipsY) {
+      const scrollsX = scrollingOverflows.includes(style.overflowX)
+      const scrollsY = scrollingOverflows.includes(style.overflowY)
+      if (clipsX || clipsY || scrollsX || scrollsY) {
         const box = getClipBox({ element: current, cache })
-        if (clipsX && (rect.right <= box.left || rect.left >= box.right)) {
+        if (
+          clipsX &&
+          (reachable.right <= box.left || reachable.left >= box.right)
+        ) {
           return true
         }
-        if (clipsY && (rect.bottom <= box.top || rect.top >= box.bottom)) {
+        if (
+          clipsY &&
+          (reachable.bottom <= box.top || reachable.top >= box.bottom)
+        ) {
           return true
+        }
+        reachable = {
+          left: scrollsX ? box.left : reachable.left,
+          right: scrollsX ? box.right : reachable.right,
+          top: scrollsY ? box.top : reachable.top,
+          bottom: scrollsY ? box.bottom : reachable.bottom,
         }
       }
       position = style.position
