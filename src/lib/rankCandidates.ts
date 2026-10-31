@@ -39,10 +39,14 @@ export const rankCandidates = ({
 
   if (!activeElement) return ranked
 
-  // Down / right enter a focusable container (e.g. a card with tabindex) at its first focusable child
+  // Down / right enter a focusable container (e.g. a card with tabindex) at its first focusable child.
+  // Only children the strategy kept count, so custom strategies can exclude elements.
+  const kept = new Set(ranked.map(({ element }) => element))
   const firstChild = isForward({ direction })
-    ? candidates.find(({ element }) =>
-        containsComposed({ container: activeElement, element }),
+    ? candidates.find(
+        ({ element }) =>
+          kept.has(element) &&
+          containsComposed({ container: activeElement, element }),
       )
     : undefined
   if (firstChild) return moveToFront({ ranked, item: firstChild })

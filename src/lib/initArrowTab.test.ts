@@ -8,6 +8,7 @@ import {
   test,
 } from 'vitest'
 import { initArrowTab, type ArrowTabOptions } from './initArrowTab.js'
+import { spatial } from './strategies.js'
 
 // happy-dom has no layout, so elements get their position from data-rect="left top width height"
 const getDataRect = ({ element }: { element: Element }) => {
@@ -353,6 +354,31 @@ describe('navigation', () => {
 
     // happy-dom lacks assignedSlot, staying inside the modal is checked in the browser
     press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('b'))
+  })
+
+  test('entering a focusable container respects custom strategy exclusions', () => {
+    setup({
+      html: `
+        <div id="card" tabindex="0" data-rect="0 0 300 100">
+          <button class="skip-me" data-rect="0 0 100 40">skipped</button>
+          <button id="b" data-rect="120 0 100 40">b</button>
+        </div>
+      `,
+      options: {
+        strategy: ({ origin, candidates, direction }) =>
+          spatial({
+            origin,
+            direction,
+            candidates: candidates.filter(
+              ({ element }) => !element.matches('.skip-me'),
+            ),
+          }),
+      },
+    })
+    byId('card').focus()
+
+    press({ key: 'ArrowRight' })
     expect(document.activeElement).toBe(byId('b'))
   })
 
