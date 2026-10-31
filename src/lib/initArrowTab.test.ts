@@ -357,6 +357,28 @@ describe('navigation', () => {
     expect(document.activeElement).toBe(byId('b'))
   })
 
+  test('entering a scope respects custom strategy exclusions', () => {
+    setup({
+      html: `
+        <button class="skip-me" data-rect="0 0 100 40">skipped</button>
+        <button id="b" data-rect="0 60 100 40">b</button>
+      `,
+      options: {
+        strategy: ({ origin, candidates, direction }) =>
+          spatial({
+            origin,
+            direction,
+            candidates: candidates.filter(
+              ({ element }) => !element.matches('.skip-me'),
+            ),
+          }),
+      },
+    })
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('b'))
+  })
+
   test('entering a focusable container respects custom strategy exclusions', () => {
     setup({
       html: `
@@ -431,6 +453,46 @@ describe('text fields', () => {
     textarea.setSelectionRange(8, 8)
     press({ key: 'ArrowDown' })
     expect(document.activeElement).toBe(byId('below'))
+  })
+})
+
+describe('contenteditable', () => {
+  const placeCaret = ({ node, offset }: { node: Node; offset: number }) => {
+    const range = document.createRange()
+    range.setStart(node, offset)
+    range.collapse(true)
+    window.getSelection()?.removeAllRanges()
+    window.getSelection()?.addRange(range)
+  }
+
+  test('preserved whitespace counts as content', () => {
+    setup({
+      html: `
+        <div id="editor" contenteditable="true" style="white-space: pre-wrap" data-rect="0 0 100 40">abc </div>
+        <button data-rect="120 0 100 40">right</button>
+      `,
+    })
+    const editor = byId('editor')
+    editor.focus()
+    placeCaret({ node: editor.firstChild!, offset: 3 })
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(editor)
+  })
+
+  test('collapsed whitespace is ignored', () => {
+    setup({
+      html: `
+        <div id="editor" contenteditable="true" data-rect="0 0 100 40">abc </div>
+        <button id="right" data-rect="120 0 100 40">right</button>
+      `,
+    })
+    const editor = byId('editor')
+    editor.focus()
+    placeCaret({ node: editor.firstChild!, offset: 3 })
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('right'))
   })
 })
 

@@ -110,6 +110,20 @@ const canMoveCaretInField = ({
   }
 }
 
+// Collapsed whitespace (e.g. from the HTML source) isn't visible, so the caret can't move over it
+const getRenderedText = ({
+  element,
+  text,
+}: {
+  element: HTMLElement
+  text: string
+}) => {
+  const { whiteSpace } = window.getComputedStyle(element)
+  if (['pre', 'pre-wrap', 'break-spaces'].includes(whiteSpace)) return text
+  if (whiteSpace === 'pre-line') return text.replace(/[^\S\n]+/g, '')
+  return text.trim()
+}
+
 const canMoveCaretInContentEditable = ({
   element,
   direction,
@@ -132,8 +146,7 @@ const canMoveCaretInContentEditable = ({
   } else {
     rest.setStart(range.endContainer, range.endOffset)
   }
-  // Whitespace from the HTML source isn't visible
-  const hasText = rest.toString().trim().length > 0
+  const hasText = getRenderedText({ element, text: rest.toString() }).length > 0
   if (!vertical) return hasText
 
   // Up / down leave once the rest of the content is on the caret's line

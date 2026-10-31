@@ -10,7 +10,7 @@ import { containsComposed, getDeepActiveElement } from './dom.js'
 import { startAutoDetectHistory } from './focusHistory.js'
 import { startFocusTracker } from './focusTracker.js'
 import { createClipCheck, getFocusable } from './focusable.js'
-import { getRect } from './geometry.js'
+import { getRect, type Rect } from './geometry.js'
 import { hasDisabledKeys } from './hasDisabledKeys.js'
 import { dispatchNavigate } from './navigateEvent.js'
 import { rankCandidates } from './rankCandidates.js'
@@ -42,6 +42,8 @@ const getActiveElement = () => {
 }
 
 const initializedRoots = new Set<Element | undefined>()
+
+const emptyRect: Rect = { top: 0, right: 0, bottom: 0, left: 0 }
 
 export const initArrowTab = ({
   debug = false,
@@ -151,15 +153,26 @@ export const initArrowTab = ({
       return
     }
 
+    // The first element in document order the strategy keeps
+    const getScopeEntry = () => {
+      const kept = new Set(
+        (origin
+          ? ranked
+          : rank({ origin: emptyRect, candidates, direction })
+        ).map(({ element }) => element),
+      )
+      return candidates.find(
+        (item) => kept.has(item.element) && !isClipped(item),
+      )
+    }
+
     // Enter the scope if focus is outside of it: nothing is focused or focus is behind a modal
     const isOutsideScope =
       !activeElement ||
       !containsComposed({ container: scope, element: activeElement })
     const target =
       ranked.find(isTarget) ??
-      (isOutsideScope
-        ? candidates.find((item) => !isClipped(item))
-        : undefined) ??
+      (isOutsideScope ? getScopeEntry() : undefined) ??
       (origin && scope.matches(wrapSelector) && candidates.length > 0
         ? rank({
             origin: getWrapOrigin({ origin, candidates, direction }),
