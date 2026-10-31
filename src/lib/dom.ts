@@ -57,6 +57,10 @@ export const querySelectorAllDeep = ({
 }): Element[] => {
   const found = new Set<Element>()
   const visit = ({ node }: { node: ParentNode }) => {
+    // The node itself can be a host, e.g. the root or a component assigned to a slot
+    if (node instanceof Element && node.shadowRoot) {
+      visit({ node: node.shadowRoot })
+    }
     for (const element of node.querySelectorAll(selector)) found.add(element)
     for (const slot of node.querySelectorAll('slot')) {
       for (const assigned of slot.assignedElements({ flatten: true })) {
@@ -67,9 +71,6 @@ export const querySelectorAllDeep = ({
     for (const element of node.querySelectorAll('*')) {
       if (element.shadowRoot) visit({ node: element.shadowRoot })
     }
-  }
-  if (root instanceof Element && root.shadowRoot) {
-    visit({ node: root.shadowRoot })
   }
   visit({ node: root })
   return [...found]

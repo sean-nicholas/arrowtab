@@ -419,6 +419,27 @@ describe('navigation', () => {
     expect(document.activeElement).toBe(byId('b'))
   })
 
+  test('finds elements in the shadow root of a slotted component', () => {
+    setup({
+      html: `
+        <button data-rect="0 300 100 40">behind</button>
+        <div id="host"><div id="slotted"></div></div>
+      `,
+    })
+    byId('host').attachShadow({ mode: 'open' }).innerHTML = `
+      <div role="dialog" aria-modal="true"><slot></slot></div>
+    `
+    const shadow = byId('slotted').attachShadow({ mode: 'open' })
+    shadow.innerHTML = `
+      <button id="a" data-rect="0 0 100 40">a</button>
+      <button id="b" data-rect="0 60 100 40">b</button>
+    `
+    ;(shadow.getElementById('a') as HTMLElement).focus()
+
+    press({ key: 'ArrowDown' })
+    expect(shadow.activeElement).toBe(shadow.getElementById('b'))
+  })
+
   test('cleanup removes the listener', () => {
     setup({
       html: `

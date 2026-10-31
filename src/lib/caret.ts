@@ -16,6 +16,8 @@ const mirroredStyles = [
   'tabSize',
   'wordBreak',
   'overflowWrap',
+  // e.g. pre for wrap="off"
+  'whiteSpace',
   'direction',
   'paddingTop',
   'paddingRight',
@@ -46,7 +48,6 @@ const getCaretLine = ({
     top: '0',
     left: '-9999px',
     visibility: 'hidden',
-    whiteSpace: 'pre-wrap',
     border: '0',
     overflow: 'hidden',
     boxSizing: 'content-box',
