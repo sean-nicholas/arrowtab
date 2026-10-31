@@ -140,6 +140,21 @@ describe('navigation', () => {
     expect(document.activeElement).toBe(byId('action'))
   })
 
+  test('reaches nested editors with a tabindex', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <div contenteditable="true" data-rect="0 60 300 40">
+          <div id="nested" contenteditable="true" tabindex="0" data-rect="200 60 100 40">nested</div>
+        </div>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('nested'))
+  })
+
   test('skips elements that are not focusable via Tab', () => {
     setup({
       html: `
@@ -678,6 +693,23 @@ describe('scopes', () => {
 
     press({ key: 'ArrowDown' })
     expect(shadow.activeElement).toBe(shadow.getElementById('inner'))
+  })
+
+  test("text fields behind a modal don't keep the arrow keys", () => {
+    setup({
+      html: `
+        <input id="behind" value="hello" data-rect="0 0 100 40" />
+        <div role="dialog" aria-modal="true">
+          <button id="a" data-rect="0 300 100 40">a</button>
+        </div>
+      `,
+    })
+    const input = byId('behind') as HTMLInputElement
+    input.focus()
+    input.setSelectionRange(2, 2)
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('a'))
   })
 
   test('data-arrowtab="scope" keeps focus inside', () => {

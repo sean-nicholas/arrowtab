@@ -106,7 +106,14 @@ export const initArrowTab = ({
       return
     }
 
-    if (activeElement) {
+    const scope = getScope({ activeElement, root: rootElement })
+    // Enter the scope if focus is outside of it: nothing is focused or focus is behind a modal
+    const isOutsideScope =
+      !activeElement ||
+      !containsComposed({ container: scope, element: activeElement })
+
+    // Widgets and text fields behind a modal don't keep the arrow keys
+    if (activeElement && !isOutsideScope) {
       if (isHandledByWidget({ activeElement, direction })) {
         log('arrow key is handled by a widget')
         return
@@ -117,7 +124,6 @@ export const initArrowTab = ({
       }
     }
 
-    const scope = getScope({ activeElement, root: rootElement })
     const candidates = getFocusable({ root: scope }).filter(
       ({ element }) => element !== activeElement,
     )
@@ -166,10 +172,6 @@ export const initArrowTab = ({
       )
     }
 
-    // Enter the scope if focus is outside of it: nothing is focused or focus is behind a modal
-    const isOutsideScope =
-      !activeElement ||
-      !containsComposed({ container: scope, element: activeElement })
     const target =
       ranked.find(isTarget) ??
       (isOutsideScope ? getScopeEntry() : undefined) ??

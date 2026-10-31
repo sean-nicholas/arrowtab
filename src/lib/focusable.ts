@@ -47,8 +47,12 @@ const isFocusable = ({ element }: { element: Element }) => {
   // Negative tabindex is skipped by Tab, so ArrowTab skips it too
   if (Number(element.getAttribute('tabindex')) < 0) return false
   // Children of a contenteditable are part of the editor, not separate targets.
-  // Controls marked with contenteditable="false" are independent and stay.
-  if (element.isContentEditable && element.parentElement?.isContentEditable) {
+  // Controls marked with contenteditable="false" and nested editors with a tabindex are independent and stay.
+  if (
+    element.isContentEditable &&
+    element.parentElement?.isContentEditable &&
+    !element.hasAttribute('tabindex')
+  ) {
     return false
   }
   if (closestComposed({ element, selector: excludedSelector })) return false
