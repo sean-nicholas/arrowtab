@@ -1,6 +1,6 @@
 {
   "name": "arrowtab",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "Use arrow keys to \"tab\" between focusable elements",
   "keywords": [
     "arrowkeys",
@@ -30,6 +30,7 @@
     "@arethetypeswrong/cli": "^0.15.4",
     "@changesets/cli": "^2.27.7",
     "concurrently": "^8.2.2",
+    "happy-dom": "^21.0.4",
     "http-server": "^14.1.1",
     "prettier": "^3.3.3",
     "prettier-ignore": "^0.1.3",

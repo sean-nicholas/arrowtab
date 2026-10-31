@@ -1,34 +1,44 @@
+import type { Rect } from './geometry.js'
+import type { RankedCandidate } from './strategies.js'
+
 let inDebugMode = false
 
 export const activateDebugMode = ({
-  focusableElements,
+  origin,
+  items,
 }: {
-  focusableElements: { element: Element; withinReach: boolean }[]
+  origin: Rect | undefined
+  items: RankedCandidate[]
 }) => {
   inDebugMode = true
 
-  if (document.activeElement) {
+  if (origin) {
     addDebugElementToDom({
-      element: document.activeElement,
-      withinReach: false,
-      content: '',
+      rect: origin,
+      label: '',
       color: 'rgb(33 150 243 / 80%)',
+      details: { origin },
     })
   }
 
-  let counter = focusableElements.length
-  let withinReachCounter = focusableElements.filter(
-    (focusable) => focusable.withinReach,
-  ).length
-  for (const focusable of [...focusableElements].reverse()) {
+  let withinReachCounter = 0
+  const labeled = items.map((item, index) => {
+    if (item.withinReach) withinReachCounter++
+    return {
+      item,
+      label: `${index + 1} ${item.withinReach ? `(${withinReachCounter})` : ''}`,
+    }
+  })
+
+  // Nearest elements are added last, so they are on top if they overlap
+  for (const { item, label } of labeled.reverse()) {
     addDebugElementToDom({
-      ...focusable,
-      content: `<div>${counter--} ${
-        focusable.withinReach ? `(${withinReachCounter--})` : ''
-      }</div>`,
-      color: focusable.withinReach
+      rect: item.rect,
+      label,
+      color: item.withinReach
         ? 'rgba(76 175 80 / 80%)'
         : 'rgb(244 67 54 / 80%)',
+      details: { item },
     })
   }
 }
@@ -38,33 +48,31 @@ export const deactivateDebugMode = () => {
     div.remove()
   })
   inDebugMode = false
-  return
 }
 
 export const isInDebugMode = () => inDebugMode
 
-const addDebugElementToDom = (focusable: {
-  element: Element
-  withinReach: boolean
-  content: string
+const addDebugElementToDom = ({
+  rect,
+  label,
+  color,
+  details,
+}: {
+  rect: Rect
+  label: string
   color: string
+  details: object
 }) => {
-  if (!(focusable.element instanceof HTMLElement)) return
   const div = document.createElement('div')
-  const rect = focusable.element.getBoundingClientRect()
-  const scrollX = document.documentElement.scrollLeft
-  const scrollY = document.documentElement.scrollTop
 
   div.style.position = 'absolute'
-  div.style.top = `${rect.top + scrollY}px`
-  div.style.left = `${rect.left + scrollX}px`
-  let width = Math.max(rect.width, 10)
-  let height = Math.max(rect.height, 10)
-  div.style.width = `${width}px`
-  div.style.height = `${height}px`
+  div.style.top = `${rect.top}px`
+  div.style.left = `${rect.left}px`
+  div.style.width = `${Math.max(rect.right - rect.left, 10)}px`
+  div.style.height = `${Math.max(rect.bottom - rect.top, 10)}px`
 
   div.style.color = 'white'
-  div.style.backgroundColor = focusable.color
+  div.style.backgroundColor = color
   div.style.zIndex = '100000'
   div.style.display = 'flex'
   div.style.alignItems = 'center'
@@ -72,18 +80,13 @@ const addDebugElementToDom = (focusable: {
   div.style.cursor = 'pointer'
   div.style.borderRadius = '4px'
 
-  div.innerHTML = focusable.content
+  div.textContent = label
   div.dataset.arrowtab = 'debug'
 
-  // Move the click event to the focusable element
   div.addEventListener('click', (e) => {
     e.preventDefault()
     e.stopPropagation()
-    console.log({
-      focusable,
-      rect,
-      debugElement: div,
-    })
+    console.log({ ...details, rect, debugElement: div })
   })
 
   document.body.appendChild(div)
