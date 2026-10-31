@@ -1,4 +1,8 @@
-import { containsComposed, getComposedParent } from './dom.js'
+import {
+  containsComposed,
+  getComposedParent,
+  querySelectorAllDeep,
+} from './dom.js'
 import { isVisible } from './focusable.js'
 
 const modalSelector = '[aria-modal="true"], dialog[open]'
@@ -41,9 +45,21 @@ export const getScope = ({
   activeElement: Element | null
   root: Element
 }): Element => {
-  const topModal = Array.from(root.querySelectorAll(modalSelector))
-    .filter((element) => isOpenModal({ element }))
-    .at(-1)
+  const openModals = querySelectorAllDeep({
+    root,
+    selector: modalSelector,
+  }).filter((element) => isOpenModal({ element }))
+  const focusedModal = activeElement
+    ? [...openModals]
+        .reverse()
+        .find((modal) =>
+          containsComposed({ container: modal, element: activeElement }),
+        )
+    : undefined
+  // Native modal dialogs make everything else inert, so focus inside one means it is on top.
+  // Otherwise the last one in the DOM is assumed to be on top.
+  const topModal =
+    focusedModal?.tagName === 'DIALOG' ? focusedModal : openModals.at(-1)
 
   let current = activeElement
   while (current && current !== root) {

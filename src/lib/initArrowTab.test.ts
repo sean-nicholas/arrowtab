@@ -505,6 +505,26 @@ describe('scopes', () => {
     expect(document.activeElement).toBe(byId('a'))
   })
 
+  test('finds modals inside shadow roots', () => {
+    setup({
+      html: `
+        <button id="behind" data-rect="0 0 100 40">behind</button>
+        <button data-rect="0 60 100 40">behind 2</button>
+        <div id="host"></div>
+      `,
+    })
+    const shadow = byId('host').attachShadow({ mode: 'open' })
+    shadow.innerHTML = `
+      <div role="dialog" aria-modal="true">
+        <button id="inner" data-rect="0 300 100 40">inner</button>
+      </div>
+    `
+    byId('behind').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(shadow.activeElement).toBe(shadow.getElementById('inner'))
+  })
+
   test('data-arrowtab="scope" keeps focus inside', () => {
     setup({
       html: `
