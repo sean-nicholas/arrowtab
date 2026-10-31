@@ -60,7 +60,7 @@ export const initArrowTab = ({
   initializedRoots.add(root)
 
   const rank = typeof strategy === 'function' ? strategy : strategies[strategy]
-  const focusTracker = startFocusTracker()
+  const focusTracker = startFocusTracker({ root })
   // The last move, so the opposite direction can return to where focus came from
   let lastMove:
     | { from: HTMLElement; to: HTMLElement; direction: Direction }
@@ -92,10 +92,11 @@ export const initArrowTab = ({
 
     const activeElement = getActiveElement()
     const rootElement = root ?? document.body
-    if (root) {
-      const element = activeElement ?? focusTracker.getLastElement()
-      if (!element || !containsComposed({ container: root, element })) return
-    }
+    // Without focus, e.g. after the focused element was removed, it counts where focus was last
+    const isInRoot = activeElement
+      ? containsComposed({ container: rootElement, element: activeElement })
+      : focusTracker.isLastInRoot() || !root
+    if (!isInRoot) return
 
     if (activeElement) {
       if (hasDisabledKeys({ activeElement, direction })) {

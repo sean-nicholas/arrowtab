@@ -259,6 +259,22 @@ describe('navigation', () => {
     expect(document.activeElement).toBe(byId('outside'))
   })
 
+  test('the root option keeps lost focus recovery', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <button id="removed" data-rect="0 0 100 40">removed</button>
+        <button id="below" data-rect="0 60 100 40">below</button>
+      </div>
+    `
+    cleanup = initArrowTab({ root: byId('root') }).cleanup
+    byId('removed').focus()
+    byId('removed').remove()
+    ;(document.activeElement as HTMLElement | null)?.blur()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('below'))
+  })
+
   test('navigates into and out of shadow roots', () => {
     setup({
       html: `
@@ -468,6 +484,24 @@ describe('scopes', () => {
     press({ key: 'ArrowDown' })
     expect(document.activeElement).toBe(byId('b'))
     press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('a'))
+  })
+
+  test('a modal wins over the scope focus is in', () => {
+    setup({
+      html: `
+        <div data-arrowtab="scope">
+          <button id="behind" data-rect="0 0 100 40">behind</button>
+          <button data-rect="0 60 100 40">behind 2</button>
+        </div>
+        <div role="dialog" aria-modal="true">
+          <button id="a" data-rect="0 300 100 40">a</button>
+        </div>
+      `,
+    })
+    byId('behind').focus()
+
+    press({ key: 'ArrowDown' })
     expect(document.activeElement).toBe(byId('a'))
   })
 

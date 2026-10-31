@@ -1,4 +1,4 @@
-import { getComposedParent } from './dom.js'
+import { containsComposed, getComposedParent } from './dom.js'
 import { isVisible } from './focusable.js'
 
 const modalSelector = '[aria-modal="true"], dialog[open]'
@@ -30,7 +30,7 @@ const scopeSelector = [
 
 /**
  * The element navigation is restricted to:
- * 1. The closest `data-arrowtab="scope"` or dialog around the active element
+ * 1. The closest `data-arrowtab="scope"` or dialog around the active element, unless it is behind an open modal
  * 2. The top most open modal, so focus can't stay behind it
  * 3. The root (the whole document by default)
  */
@@ -41,14 +41,23 @@ export const getScope = ({
   activeElement: Element | null
   root: Element
 }): Element => {
+  const topModal = Array.from(root.querySelectorAll(modalSelector))
+    .filter((element) => isOpenModal({ element }))
+    .at(-1)
+
   let current = activeElement
   while (current && current !== root) {
-    if (current.matches(scopeSelector)) return current
+    if (current.matches(scopeSelector)) {
+      if (
+        !topModal ||
+        containsComposed({ container: topModal, element: current })
+      ) {
+        return current
+      }
+      break
+    }
     current = getComposedParent({ element: current })
   }
 
-  const openModals = Array.from(root.querySelectorAll(modalSelector)).filter(
-    (element) => isOpenModal({ element }),
-  )
-  return openModals.at(-1) ?? root
+  return topModal ?? root
 }
