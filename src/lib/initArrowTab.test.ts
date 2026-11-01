@@ -266,6 +266,59 @@ describe('navigation', () => {
     expect(document.activeElement).toBe(byId('b'))
   })
 
+  test('data-arrowtab="arrow-only" reaches elements with a negative tabindex', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <div data-arrowtab="arrow-only">
+          <button id="slot-1" tabindex="-1" data-rect="0 60 100 40">slot 1</button>
+          <button id="slot-2" tabindex="-1" data-rect="120 60 100 40">slot 2</button>
+        </div>
+        <button id="b" tabindex="-1" data-arrowtab="arrow-only" data-rect="240 60 100 40">b</button>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowDown' })
+    expect(document.activeElement).toBe(byId('slot-1'))
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('slot-2'))
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('b'))
+  })
+
+  test('data-arrowtab="arrow-only" keeps excluding skipped and disabled elements', () => {
+    setup({
+      html: `
+        <div data-arrowtab="arrow-only">
+          <button id="a" tabindex="-1" data-rect="0 0 100 40">a</button>
+          <button tabindex="-1" disabled data-rect="120 0 100 40">disabled</button>
+          <button tabindex="-1" data-arrowtab="skip" data-rect="240 0 100 40">skipped</button>
+          <button id="b" tabindex="-1" data-rect="360 0 100 40">b</button>
+        </div>
+      `,
+    })
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(document.activeElement).toBe(byId('b'))
+  })
+
+  test('data-arrowtab="arrow-only" on a shadow host applies to its shadow content', () => {
+    setup({
+      html: `
+        <button id="a" data-rect="0 0 100 40">a</button>
+        <div id="host" data-arrowtab="arrow-only" data-rect="120 0 100 40"></div>
+      `,
+    })
+    const shadow = byId('host').attachShadow({ mode: 'open' })
+    shadow.innerHTML = `<button id="inner" tabindex="-1" data-rect="120 0 100 40">inner</button>`
+    byId('a').focus()
+
+    press({ key: 'ArrowRight' })
+    expect(shadow.activeElement).toBe(shadow.getElementById('inner'))
+  })
+
   test('the navigate event can cancel navigation', () => {
     setup({
       html: `
