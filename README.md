@@ -239,6 +239,20 @@ Like `scope`, but at the edge focus jumps to the opposite side, preferably in th
 
 The element (and its children) is skipped by the arrow keys but stays reachable with `Tab`. Useful for e.g. help links next to every field.
 
+### arrow-only
+
+Makes elements with a negative `tabindex` inside this element (or the element itself) reachable with the arrow keys. `Tab` still skips them. Useful for large grids, e.g. a calendar with one button per time slot: the arrow keys step across the slots and `Tab` jumps over the whole grid.
+
+```html
+<div data-arrowtab="arrow-only">
+  <button tabindex="-1">Mon 08:00</button>
+  <button tabindex="-1">Mon 08:30</button>
+  <!-- ... -->
+</div>
+```
+
+Make sure the grid can still be entered with `Tab`, e.g. by giving one slot `tabindex="0"`. Disabled, hidden and `skip` elements stay excluded.
+
 ### enable
 
 Turns off the [ARIA widget](#aria-widgets) detection for this element and its children.

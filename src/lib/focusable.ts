@@ -24,6 +24,8 @@ const focusableSelector = [
 const excludedSelector =
   '[inert], [hidden], [aria-hidden="true"], [data-arrowtab~="skip"]'
 
+const arrowOnlySelector = '[data-arrowtab~="arrow-only"]'
+
 export const isVisible = ({ element }: { element: Element }) => {
   if (typeof element.checkVisibility === 'function') {
     return element.checkVisibility({
@@ -44,8 +46,13 @@ export const isVisible = ({ element }: { element: Element }) => {
 const isFocusable = ({ element }: { element: Element }) => {
   if (!(element instanceof HTMLElement)) return false
   if (element.matches(':disabled')) return false
-  // Negative tabindex is skipped by Tab, so ArrowTab skips it too
-  if (Number(element.getAttribute('tabindex')) < 0) return false
+  // Negative tabindex is skipped by Tab, so ArrowTab skips it too, unless it is opted in with arrow-only
+  if (
+    Number(element.getAttribute('tabindex')) < 0 &&
+    !closestComposed({ element, selector: arrowOnlySelector })
+  ) {
+    return false
+  }
   // Children of a contenteditable are part of the editor, not separate targets.
   // Controls marked with contenteditable="false" and nested editors with a tabindex are independent and stay.
   if (
