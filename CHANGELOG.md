@@ -1,5 +1,11 @@
 # arrowtab
 
+## 0.2.0
+
+### Minor Changes
+
+- 03ef29b: New `data-arrowtab="arrow-only"` keyword: elements with a negative `tabindex` inside it are reachable with the arrow keys while `Tab` still skips them, e.g. the slots of a large calendar grid.
+
 ## 0.1.0
 
 ### Minor Changes
