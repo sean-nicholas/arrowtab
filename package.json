@@ -11,9 +11,9 @@
   "main": "dist/index.js",
   "scripts": {
     "prepublishOnly": "npm run ci",
-    "test": "vitest run",
-    "dev": "concurrently \"tsc --watch\" \"http-server -o --cors\"",
-    "build": "pnpm clean && tsc",
+    "test": "vitest run --dir src",
+    "dev": "concurrently \"tsc --watch -p tsconfig.build.json\" \"http-server -o --cors\"",
+    "build": "pnpm clean && tsc -p tsconfig.build.json",
     "prepublish": "pnpm clean && pnpm build",
     "clean": "rm -rf dist",
     "ci": "pnpm run build && pnpm run check-format && pnpm run check-exports && pnpm run test",
